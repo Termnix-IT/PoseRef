@@ -1,0 +1,33 @@
+import { useAppStore } from '../../store'
+import { Button } from '../ui/Button'
+
+export function Header() {
+  const resetAll = useAppStore((state) => state.resetAll)
+  const isExporting = useAppStore((state) => state.isExporting)
+
+  return (
+    <header className="header">
+      <div className="header__brand">
+        <div className="header__logo" aria-hidden>
+          <svg viewBox="0 0 32 32" fill="#0e1014">
+            <circle cx="16" cy="8.5" r="3.4" />
+            <rect x="13.6" y="12.5" width="4.8" height="9" rx="2.4" />
+            <rect x="8" y="13" width="4" height="8" rx="2" transform="rotate(20 10 17)" />
+            <rect x="20" y="13" width="4" height="8" rx="2" transform="rotate(-20 22 17)" />
+            <rect x="11.5" y="20.5" width="4" height="8.5" rx="2" />
+            <rect x="16.5" y="20.5" width="4" height="8.5" rx="2" />
+          </svg>
+        </div>
+        <h1 className="header__title">PoseRef</h1>
+      </div>
+      <span className="header__tagline">画像生成AI向け 構図・ポーズ参考画像メーカー</span>
+      <div className="header__spacer" />
+      <span className="header__status" aria-live="polite">
+        {isExporting ? 'Rendering...' : null}
+      </span>
+      <Button size="sm" onClick={resetAll} title="Reset pose, character, camera, FOV and aspect ratio">
+        Reset All
+      </Button>
+    </header>
+  )
+}

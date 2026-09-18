@@ -1,0 +1,228 @@
+.app {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr) auto;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header__logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #4f8cff, #7cc4ff);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(79, 140, 255, 0.35);
+}
+
+.header__logo svg {
+  width: 18px;
+  height: 18px;
+}
+
+.header__title {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.header__tagline {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+
+.header__spacer {
+  flex: 1;
+}
+
+.header__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+/* Main area */
+.app__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: 0;
+}
+
+/* Viewport */
+.viewport {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--bg-deep);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  overflow: hidden;
+}
+
+.viewport__frame {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #7d7d7d;
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    var(--shadow);
+}
+
+.viewport__frame--transparent {
+  background-color: #9a9a9a;
+  background-image:
+    linear-gradient(45deg, #707070 25%, transparent 25%),
+    linear-gradient(-45deg, #707070 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #707070 75%),
+    linear-gradient(-45deg, transparent 75%, #707070 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
+}
+
+.viewport__frame canvas {
+  display: block;
+}
+
+.viewport__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: rgba(10, 12, 16, 0.74);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viewport__badge-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+
+.viewport__badge-value {
+  color: var(--text);
+}
+
+.viewport__hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-faint);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Sidebar */
+.sidebar {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+}
+
+/* Prompt panel */
+.prompt-panel {
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 12px 16px 14px;
+}
+
+.prompt-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.prompt-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.prompt-panel__desc {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.prompt-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  body {
+    overflow: auto;
+  }
+
+  .app {
+    height: auto;
+    min-height: 100vh;
+    grid-template-rows: 48px auto auto;
+  }
+
+  .app__main {
+    grid-template-columns: 1fr;
+  }
+
+  .viewport {
+    height: 62vh;
+  }
+
+  .sidebar {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .prompt-panel__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header__tagline {
+    display: none;
+  }
+}

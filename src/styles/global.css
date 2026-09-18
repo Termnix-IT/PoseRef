@@ -1,0 +1,96 @@
+:root {
+  --bg: #0e1014;
+  --bg-deep: #0a0c10;
+  --panel: #161920;
+  --panel-2: #1c2029;
+  --panel-3: #242a35;
+  --border: #2a303b;
+  --border-strong: #3a4250;
+  --text: #e7e9ee;
+  --text-muted: #8f97a5;
+  --text-faint: #5f6774;
+  --accent: #4f8cff;
+  --accent-hover: #6a9dff;
+  --accent-soft: rgba(79, 140, 255, 0.18);
+  --accent-ring: rgba(79, 140, 255, 0.45);
+  --success: #3ccb7f;
+  --danger: #ff6b6b;
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', 'Yu Gothic UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2f3541;
+  border-radius: 8px;
+  border: 2px solid var(--panel);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d4553;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 1px;
+}
