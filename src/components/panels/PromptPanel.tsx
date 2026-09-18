@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { POSE_PRESET_MAP } from '../../constants/posePresets'
 import { PROMPT_LANGUAGES } from '../../constants/prompts'
+import { UI } from '../../constants/uiText'
 import { useCopyText } from '../../hooks/useCopyText'
 import { useAppStore } from '../../store'
 import type { PromptLanguage } from '../../types'
@@ -18,25 +19,23 @@ export function PromptPanel() {
   const presetId = useAppStore((state) => state.pose.presetId)
   const aspectRatio = useAppStore((state) => state.aspectRatio)
 
-  const context = useMemo<PromptContext>(
-    () => ({
-      poseLabel: presetId === 'custom' ? 'Custom' : POSE_PRESET_MAP[presetId].label,
+  const context = useMemo<PromptContext>(() => {
+    const preset = presetId === 'custom' ? null : POSE_PRESET_MAP[presetId]
+    return {
+      poseLabel: preset ? { ja: preset.label, en: preset.labelEn } : { ja: UI.common.custom, en: 'Custom' },
       aspectRatio,
       composition: describeComposition(camera, character),
-    }),
-    [presetId, aspectRatio, camera, character],
-  )
+    }
+  }, [presetId, aspectRatio, camera, character])
 
   return (
-    <section className="prompt-panel" aria-label="AI Prompt Generator">
+    <section className="prompt-panel" aria-label={UI.prompt.title}>
       <header className="prompt-panel__header">
         <div>
-          <h2 className="prompt-panel__title">AI Prompt Generator</h2>
-          <p className="prompt-panel__desc">
-            書き出したPNGと一緒に画像生成AIへ渡すプロンプトです。ポーズと構図だけを参照させ、マネキンのデザインは反映させません。
-          </p>
+          <h2 className="prompt-panel__title">{UI.prompt.title}</h2>
+          <p className="prompt-panel__desc">{UI.prompt.description}</p>
         </div>
-        <Toggle label="Append composition details" checked={includeDetails} onChange={setIncludeDetails} />
+        <Toggle label={UI.prompt.appendDetails} checked={includeDetails} onChange={setIncludeDetails} />
       </header>
       <div className="prompt-panel__grid">
         {PROMPT_LANGUAGES.map((language) => (
@@ -62,7 +61,7 @@ interface PromptCardProps {
 
 function PromptCard({ language, title, buttonLabel, text }: PromptCardProps) {
   const { status, copy } = useCopyText()
-  const label = status === 'copied' ? 'Copied!' : status === 'error' ? 'Copy failed' : buttonLabel
+  const label = status === 'copied' ? UI.prompt.copied : status === 'error' ? UI.prompt.copyFailed : buttonLabel
 
   return (
     <div className="prompt-card">
@@ -78,7 +77,7 @@ function PromptCard({ language, title, buttonLabel, text }: PromptCardProps) {
         value={text}
         rows={4}
         lang={language}
-        aria-label={`${title} prompt`}
+        aria-label={UI.prompt.textareaOf(title)}
         onFocus={(event) => event.currentTarget.select()}
       />
     </div>

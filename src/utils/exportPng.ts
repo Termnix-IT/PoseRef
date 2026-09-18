@@ -1,5 +1,6 @@
 import { Vector2 } from 'three'
 import type { Material, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
+import { UI } from '../constants/uiText'
 
 export interface RenderPngParams {
   gl: WebGLRenderer
@@ -42,7 +43,7 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob)
-      else reject(new Error('Failed to encode PNG'))
+      else reject(new Error(UI.export.encodeFailed))
     }, 'image/png')
   })
 }
@@ -62,7 +63,7 @@ export function renderScenePng({ gl, scene, camera, width, height }: RenderPngPa
   output.width = width
   output.height = height
   const context = output.getContext('2d')
-  if (!context) return Promise.reject(new Error('2D canvas context unavailable'))
+  if (!context) return Promise.reject(new Error(UI.export.canvasUnavailable))
 
   try {
     gl.setPixelRatio(1)

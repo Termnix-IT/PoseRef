@@ -1,9 +1,9 @@
 import { BASE_PROMPTS } from '../constants/prompts'
 import type { AspectRatioId, PromptLanguage } from '../types'
-import type { CompositionSummary } from './composition'
+import type { Bilingual, CompositionSummary } from './composition'
 
 export interface PromptContext {
-  poseLabel: string
+  poseLabel: Bilingual
   aspectRatio: AspectRatioId
   composition: CompositionSummary
 }
@@ -12,13 +12,13 @@ function buildDetails(language: PromptLanguage, context: PromptContext): string 
   const { poseLabel, aspectRatio, composition } = context
   if (language === 'ja') {
     return (
-      `【構図情報】ポーズ: ${poseLabel} / ` +
+      `【構図情報】ポーズ: ${poseLabel.ja} / ` +
       `カメラ: ${composition.view.ja}・${composition.angle.ja}（FOV ${composition.fov}°・${composition.lens.ja}） / ` +
       `アスペクト比: ${aspectRatio}`
     )
   }
   return (
-    `[Composition] Pose: ${poseLabel} / ` +
+    `[Composition] Pose: ${poseLabel.en} / ` +
     `Camera: ${composition.view.en}, ${composition.angle.en} (FOV ${composition.fov}°, ${composition.lens.en}) / ` +
     `Aspect ratio: ${aspectRatio}`
   )

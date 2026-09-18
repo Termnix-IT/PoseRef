@@ -15,6 +15,6 @@ export const BASE_PROMPTS: Record<PromptLanguage, string> = {
 }
 
 export const PROMPT_LANGUAGES: Array<{ id: PromptLanguage; label: string; buttonLabel: string }> = [
-  { id: 'ja', label: '日本語', buttonLabel: 'Copy Japanese Prompt' },
-  { id: 'en', label: 'English', buttonLabel: 'Copy English Prompt' },
+  { id: 'ja', label: '日本語', buttonLabel: '日本語プロンプトをコピー' },
+  { id: 'en', label: 'English', buttonLabel: '英語プロンプトをコピー' },
 ]

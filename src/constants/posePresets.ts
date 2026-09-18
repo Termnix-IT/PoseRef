@@ -1,17 +1,28 @@
-import type { PosePreset, PosePresetId, Vec3 } from '../types'
+import type { PoseGroupId, PosePreset, PosePresetId, Vec3 } from '../types'
 
 const r = (x: number, y: number, z: number): Vec3 => ({ x, y, z })
+
+export const POSE_GROUPS: Array<{ id: PoseGroupId; label: string }> = [
+  { id: 'standing', label: '立ち' },
+  { id: 'gesture', label: '仕草' },
+  { id: 'action', label: '動き' },
+  { id: 'sitting', label: '座り・寝' },
+]
 
 /**
  * Pose presets in degrees (Euler XYZ per bone).
  * Conventions: limbs hang along -Y at rest. For arms, negative X swings forward,
  * positive Z raises the left arm outward (negative Z for the right arm).
  * For legs, negative X lifts the thigh forward and positive X on the lower leg bends the knee.
+ * Torso/head bones point +Y: positive X leans forward, positive Y turns to the left of the character.
  */
 export const POSE_PRESETS: PosePreset[] = [
+  // ---- 立ち ----
   {
     id: 'tPose',
-    label: 'T-Pose',
+    label: 'Tポーズ',
+    labelEn: 'T-Pose',
+    group: 'standing',
     bones: {
       leftUpperArm: r(0, 0, 90),
       rightUpperArm: r(0, 0, -90),
@@ -19,7 +30,9 @@ export const POSE_PRESETS: PosePreset[] = [
   },
   {
     id: 'standing',
-    label: 'Standing',
+    label: '立ち',
+    labelEn: 'Standing',
+    group: 'standing',
     bones: {
       leftUpperArm: r(-3, 0, 7),
       rightUpperArm: r(-3, 0, -7),
@@ -30,8 +43,25 @@ export const POSE_PRESETS: PosePreset[] = [
     },
   },
   {
+    id: 'handsOnHips',
+    label: '腰に手',
+    labelEn: 'Hands on Hips',
+    group: 'standing',
+    bones: {
+      chest: r(-3, 0, 0),
+      leftUpperArm: r(15, 0, 45),
+      leftForearm: r(-67, 0, -66),
+      rightUpperArm: r(15, 0, -45),
+      rightForearm: r(-67, 0, 66),
+      leftThigh: r(0, 0, 5),
+      rightThigh: r(0, 0, -5),
+    },
+  },
+  {
     id: 'armsCrossed',
-    label: 'Arms Crossed',
+    label: '腕組み',
+    labelEn: 'Arms Crossed',
+    group: 'standing',
     bones: {
       chest: r(3, 0, 0),
       leftUpperArm: r(-62, 0, -8),
@@ -43,8 +73,64 @@ export const POSE_PRESETS: PosePreset[] = [
     },
   },
   {
+    id: 'handsBehindBack',
+    label: '後ろ手',
+    labelEn: 'Hands Behind Back',
+    group: 'standing',
+    bones: {
+      chest: r(-4, 0, 0),
+      leftUpperArm: r(25, 0, 12),
+      leftForearm: r(0, 0, -72),
+      rightUpperArm: r(28, 0, -12),
+      rightForearm: r(0, 0, 72),
+      leftThigh: r(0, 0, 3),
+      rightThigh: r(0, 0, -3),
+    },
+  },
+  {
+    id: 'modelPose',
+    label: 'モデル立ち',
+    labelEn: 'Model Pose',
+    group: 'standing',
+    bones: {
+      hips: r(0, 12, 5),
+      chest: r(0, -10, -6),
+      head: r(0, 6, 4),
+      rightThigh: r(0, 0, -5),
+      leftThigh: r(-10, 0, -3),
+      leftLowerLeg: r(15, 0, 0),
+      rightUpperArm: r(15, 0, -45),
+      rightForearm: r(-67, 0, 66),
+      leftUpperArm: r(-3, 0, 8),
+      leftForearm: r(-10, 0, 0),
+    },
+    rootOffset: r(0, -0.02, 0),
+  },
+  {
+    id: 'lookingBack',
+    label: '振り返り',
+    labelEn: 'Looking Back',
+    group: 'standing',
+    bones: {
+      hips: r(0, 8, 0),
+      chest: r(0, 35, 0),
+      neck: r(0, 25, 0),
+      head: r(-8, 45, 0),
+      leftUpperArm: r(8, 0, 6),
+      rightUpperArm: r(-6, 0, -8),
+      leftForearm: r(-15, 0, 0),
+      rightForearm: r(-12, 0, 0),
+      leftThigh: r(0, 0, 3),
+      rightThigh: r(0, 0, -3),
+    },
+  },
+
+  // ---- 仕草 ----
+  {
     id: 'peaceSign',
-    label: 'Peace Sign',
+    label: 'ピース',
+    labelEn: 'Peace Sign',
+    group: 'gesture',
     bones: {
       head: r(0, 0, 8),
       rightUpperArm: r(-25, 0, -50),
@@ -56,8 +142,118 @@ export const POSE_PRESETS: PosePreset[] = [
     },
   },
   {
+    id: 'waving',
+    label: '手を振る',
+    labelEn: 'Waving',
+    group: 'gesture',
+    bones: {
+      head: r(0, 0, 6),
+      rightUpperArm: r(-10, 0, -95),
+      rightForearm: r(0, 0, -75),
+      leftUpperArm: r(-3, 0, 8),
+      leftForearm: r(-10, 0, 0),
+      leftThigh: r(0, 0, 4),
+      rightThigh: r(0, 0, -4),
+    },
+  },
+  {
+    id: 'pointing',
+    label: '指差し',
+    labelEn: 'Pointing',
+    group: 'gesture',
+    bones: {
+      chest: r(0, -6, 0),
+      head: r(0, -4, 0),
+      rightUpperArm: r(-92, 0, -8),
+      leftUpperArm: r(-3, 0, 8),
+      leftForearm: r(-10, 0, 0),
+      leftThigh: r(0, 0, 3),
+      rightThigh: r(0, 0, -3),
+    },
+  },
+  {
+    id: 'thinking',
+    label: '考える',
+    labelEn: 'Thinking',
+    group: 'gesture',
+    bones: {
+      chest: r(3, 0, 0),
+      head: r(8, -8, 6),
+      rightUpperArm: r(-40, 0, -10),
+      rightForearm: r(-157, 0, 30),
+      leftUpperArm: r(-45, 0, -10),
+      leftForearm: r(0, -12, -100),
+      leftThigh: r(0, 0, 3),
+      rightThigh: r(0, 0, -3),
+    },
+  },
+  {
+    id: 'salute',
+    label: '敬礼',
+    labelEn: 'Salute',
+    group: 'gesture',
+    bones: {
+      chest: r(-3, 0, 0),
+      rightUpperArm: r(-20, 0, -80),
+      rightForearm: r(-165, 0, -30),
+      leftUpperArm: r(0, 0, 3),
+    },
+  },
+  {
+    id: 'cheering',
+    label: 'バンザイ',
+    labelEn: 'Cheering',
+    group: 'gesture',
+    bones: {
+      chest: r(-5, 0, 0),
+      head: r(-10, 0, 0),
+      leftUpperArm: r(0, 0, 170),
+      rightUpperArm: r(0, 0, -170),
+      leftThigh: r(0, 0, 8),
+      rightThigh: r(0, 0, -8),
+    },
+  },
+  {
+    id: 'handsBehindHead',
+    label: '後頭部に手',
+    labelEn: 'Hands Behind Head',
+    group: 'gesture',
+    bones: {
+      chest: r(-5, 0, 0),
+      head: r(-5, 0, 0),
+      leftUpperArm: r(20, 0, 110),
+      leftForearm: r(156, 0, 31),
+      rightUpperArm: r(20, 0, -110),
+      rightForearm: r(156, 0, -31),
+      leftThigh: r(0, 0, 5),
+      rightThigh: r(0, 0, -5),
+    },
+  },
+
+  // ---- 動き ----
+  {
+    id: 'walking',
+    label: '歩く',
+    labelEn: 'Walking',
+    group: 'action',
+    bones: {
+      chest: r(3, 0, 0),
+      leftThigh: r(-25, 0, 1),
+      leftLowerLeg: r(15, 0, 0),
+      rightThigh: r(20, 0, -1),
+      rightLowerLeg: r(15, 0, 0),
+      rightUpperArm: r(-25, 0, -5),
+      rightForearm: r(-20, 0, 0),
+      leftUpperArm: r(20, 0, 5),
+      leftForearm: r(-15, 0, 0),
+    },
+    rootOffset: r(0, -0.04, 0),
+  },
+  {
     id: 'running',
-    label: 'Running',
+    label: '走る',
+    labelEn: 'Running',
+    group: 'action',
     bones: {
       chest: r(15, 0, 0),
       head: r(-10, 0, 0),
@@ -73,40 +269,27 @@ export const POSE_PRESETS: PosePreset[] = [
     rootOffset: r(0, -0.22, 0),
   },
   {
-    id: 'sitting',
-    label: 'Sitting',
+    id: 'jumping',
+    label: 'ジャンプ',
+    labelEn: 'Jumping',
+    group: 'action',
     bones: {
-      chest: r(5, 0, 0),
-      leftThigh: r(-90, 0, 6),
-      rightThigh: r(-90, 0, -6),
+      chest: r(-5, 0, 0),
+      head: r(-10, 0, 0),
+      leftThigh: r(-60, 0, 8),
+      rightThigh: r(-60, 0, -8),
       leftLowerLeg: r(90, 0, 0),
       rightLowerLeg: r(90, 0, 0),
-      leftUpperArm: r(-22, 0, 6),
-      rightUpperArm: r(-22, 0, -6),
-      leftForearm: r(-40, 0, 0),
-      rightForearm: r(-40, 0, 0),
+      leftUpperArm: r(0, 0, 135),
+      rightUpperArm: r(0, 0, -135),
     },
-    rootOffset: r(0, -0.4, 0),
-  },
-  {
-    id: 'lookingBack',
-    label: 'Looking Back',
-    bones: {
-      hips: r(0, 8, 0),
-      chest: r(0, 35, 0),
-      neck: r(0, 25, 0),
-      head: r(-8, 45, 0),
-      leftUpperArm: r(8, 0, 6),
-      rightUpperArm: r(-6, 0, -8),
-      leftForearm: r(-15, 0, 0),
-      rightForearm: r(-12, 0, 0),
-      leftThigh: r(0, 0, 3),
-      rightThigh: r(0, 0, -3),
-    },
+    rootOffset: r(0, 0.25, 0),
   },
   {
     id: 'fightingPose',
-    label: 'Fighting Pose',
+    label: '構え',
+    labelEn: 'Fighting Pose',
+    group: 'action',
     bones: {
       hips: r(0, 30, 0),
       chest: r(8, -12, 0),
@@ -122,6 +305,115 @@ export const POSE_PRESETS: PosePreset[] = [
     },
     rootOffset: r(0, -0.05, 0),
   },
+
+  // ---- 座り・寝 ----
+  {
+    id: 'sitting',
+    label: '椅子に座る',
+    labelEn: 'Sitting',
+    group: 'sitting',
+    bones: {
+      chest: r(5, 0, 0),
+      leftThigh: r(-90, 0, 6),
+      rightThigh: r(-90, 0, -6),
+      leftLowerLeg: r(90, 0, 0),
+      rightLowerLeg: r(90, 0, 0),
+      leftUpperArm: r(-22, 0, 6),
+      rightUpperArm: r(-22, 0, -6),
+      leftForearm: r(-40, 0, 0),
+      rightForearm: r(-40, 0, 0),
+    },
+    rootOffset: r(0, -0.4, 0),
+  },
+  {
+    id: 'kneeHug',
+    label: '体育座り',
+    labelEn: 'Knee Hug',
+    group: 'sitting',
+    bones: {
+      chest: r(15, 0, 0),
+      head: r(5, 0, 0),
+      leftThigh: r(-150, 0, 4),
+      rightThigh: r(-150, 0, -4),
+      leftLowerLeg: r(150, 0, 0),
+      rightLowerLeg: r(150, 0, 0),
+      leftUpperArm: r(-70, 0, -5),
+      leftForearm: r(43, 0, -55),
+      rightUpperArm: r(-70, 0, 5),
+      rightForearm: r(43, 0, 55),
+    },
+    rootOffset: r(0, -0.75, 0),
+  },
+  {
+    id: 'kneeling',
+    label: '片膝立ち',
+    labelEn: 'Kneeling',
+    group: 'sitting',
+    bones: {
+      chest: r(8, 0, 0),
+      leftThigh: r(0, 0, 3),
+      leftLowerLeg: r(90, 0, 0),
+      rightThigh: r(-90, 0, -5),
+      rightLowerLeg: r(90, 0, 0),
+      rightUpperArm: r(-40, 0, -5),
+      rightForearm: r(-50, 0, 0),
+      leftUpperArm: r(-5, 0, 8),
+      leftForearm: r(-15, 0, 0),
+    },
+    rootOffset: r(0, -0.41, 0),
+  },
+  {
+    id: 'seiza',
+    label: '正座',
+    labelEn: 'Seiza',
+    group: 'sitting',
+    bones: {
+      chest: r(2, 0, 0),
+      leftThigh: r(-55, 0, 6),
+      rightThigh: r(-55, 0, -6),
+      leftLowerLeg: r(145, 0, 0),
+      rightLowerLeg: r(145, 0, 0),
+      leftUpperArm: r(-25, 0, 5),
+      rightUpperArm: r(-25, 0, -5),
+      leftForearm: r(-30, 0, 0),
+      rightForearm: r(-30, 0, 0),
+    },
+    rootOffset: r(0, -0.58, 0),
+  },
+  {
+    id: 'crouching',
+    label: 'しゃがむ',
+    labelEn: 'Crouching',
+    group: 'sitting',
+    bones: {
+      chest: r(25, 0, 0),
+      head: r(-15, 0, 0),
+      leftThigh: r(-110, 0, 15),
+      rightThigh: r(-110, 0, -15),
+      leftLowerLeg: r(130, 0, 0),
+      rightLowerLeg: r(130, 0, 0),
+      leftUpperArm: r(-60, 0, 10),
+      rightUpperArm: r(-60, 0, -10),
+      leftForearm: r(-40, 0, 0),
+      rightForearm: r(-40, 0, 0),
+    },
+    rootOffset: r(0, -0.56, 0),
+  },
+  {
+    id: 'lyingDown',
+    label: '仰向け',
+    labelEn: 'Lying Down',
+    group: 'sitting',
+    bones: {
+      hips: r(-90, 0, 0),
+      leftUpperArm: r(0, 0, 15),
+      rightUpperArm: r(0, 0, -15),
+      leftThigh: r(0, 0, 4),
+      rightThigh: r(-40, 0, -4),
+      rightLowerLeg: r(70, 0, 0),
+    },
+    rootOffset: r(0, -0.82, 0),
+  },
 ]
 
 export const POSE_PRESET_MAP: Record<PosePresetId, PosePreset> = Object.fromEntries(
@@ -129,3 +421,7 @@ export const POSE_PRESET_MAP: Record<PosePresetId, PosePreset> = Object.fromEntr
 ) as Record<PosePresetId, PosePreset>
 
 export const DEFAULT_POSE_PRESET: PosePresetId = 'standing'
+
+export function posePresetsByGroup(group: PoseGroupId): PosePreset[] {
+  return POSE_PRESETS.filter((preset) => preset.group === group)
+}

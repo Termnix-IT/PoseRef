@@ -1,5 +1,6 @@
 import { getExportSize } from '../../constants/aspectRatios'
 import { BACKGROUND_MAP } from '../../constants/backgrounds'
+import { UI } from '../../constants/uiText'
 import { useExport } from '../../hooks/useExport'
 import { useAppStore } from '../../store'
 import type { ExportScale } from '../../types'
@@ -23,26 +24,23 @@ export function ExportPanel() {
   const busy = status.kind === 'busy'
 
   return (
-    <Section title="Export">
+    <Section title={UI.export.title}>
       <div className="control-group">
-        <div className="control-group__label">Base size</div>
+        <div className="control-group__label">{UI.export.baseSize}</div>
         <SegmentedControl
           options={SCALE_OPTIONS}
           value={String(exportScale) as '1' | '2'}
           onChange={(id) => setExportScale(Number(id) as ExportScale)}
-          ariaLabel="Export size"
+          ariaLabel={UI.export.baseSize}
         />
       </div>
-      <p className="hint">
-        PNG {size.width} {'\u00D7'} {size.height} px, {BACKGROUND_MAP[background].label.toLowerCase()} background.
-        Only the 3D view is exported (no UI, no selection highlight).
-      </p>
+      <p className="hint">{UI.export.hint(size.width, size.height, BACKGROUND_MAP[background].label)}</p>
       <Button variant="primary" block onClick={() => void downloadPng()} disabled={busy}>
-        {busy && status.action === 'download' ? 'Rendering...' : 'Export PNG'}
+        {busy && status.action === 'download' ? UI.export.rendering : UI.export.exportPng}
       </Button>
       {canCopyImage ? (
         <Button block onClick={() => void copyPng()} disabled={busy}>
-          {busy && status.action === 'copy' ? 'Rendering...' : 'Copy Image to Clipboard'}
+          {busy && status.action === 'copy' ? UI.export.rendering : UI.export.copyImage}
         </Button>
       ) : null}
       <ExportStatusLine status={status} />
@@ -53,5 +51,5 @@ export function ExportPanel() {
 function ExportStatusLine({ status }: { status: ReturnType<typeof useExport>['status'] }) {
   if (status.kind === 'success') return <p className="status status--success">{status.message}</p>
   if (status.kind === 'error') return <p className="status status--error">{status.message}</p>
-  return <p className="status status--muted">{status.kind === 'busy' ? 'Rendering the current view...' : ''}</p>
+  return <p className="status status--muted">{status.kind === 'busy' ? UI.export.renderingHint : ''}</p>
 }

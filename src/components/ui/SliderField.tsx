@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { UI } from '../../constants/uiText'
 import { NumberInput } from './NumberInput'
 
 export interface SliderFieldProps {
@@ -28,8 +29,8 @@ export function SliderField({ label, value, min, max, step = 1, unit, decimals, 
             type="button"
             className="field__reset"
             onClick={onReset}
-            title={`Reset ${label}`}
-            aria-label={`Reset ${label}`}
+            title={UI.common.resetOf(label)}
+            aria-label={UI.common.resetOf(label)}
           >
             {'\u21BA'}
           </button>
@@ -54,7 +55,7 @@ export function SliderField({ label, value, min, max, step = 1, unit, decimals, 
           decimals={decimals}
           unit={unit}
           onChange={onChange}
-          ariaLabel={`${label} value`}
+          ariaLabel={UI.common.valueOf(label)}
         />
       </div>
     </div>

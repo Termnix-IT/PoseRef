@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { ASPECT_RATIO_MAP, getAspectValue } from '../../constants/aspectRatios'
 import { BACKGROUND_MAP } from '../../constants/backgrounds'
+import { UI } from '../../constants/uiText'
 import { useFitAspect } from '../../hooks/useFitAspect'
 import { useAppStore } from '../../store'
 import { SceneCanvas } from './SceneCanvas'
@@ -27,15 +28,13 @@ export function Viewport() {
       <div className={frameClass} style={{ width: size.width, height: size.height }}>
         {size.width > 0 && size.height > 0 ? <SceneCanvas /> : null}
         <div className="viewport__badge">
-          <span className="viewport__badge-label">Output</span>
+          <span className="viewport__badge-label">{UI.viewport.output}</span>
           <span className="viewport__badge-value">
             {option.label} {'\u00B7'} {option.width * exportScale} {'\u00D7'} {option.height * exportScale} px
           </span>
         </div>
       </div>
-      <p className="viewport__hint">
-        Left drag: Rotate {'\u00B7'} Right drag: Pan {'\u00B7'} Wheel: Zoom {'\u00B7'} Click the model to select a bone
-      </p>
+      <p className="viewport__hint">{UI.viewport.hint}</p>
     </div>
   )
 }

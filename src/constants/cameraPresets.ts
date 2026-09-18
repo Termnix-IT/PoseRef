@@ -4,13 +4,13 @@ const v = (x: number, y: number, z: number): Vec3 => ({ x, y, z })
 
 /** Camera presets. The character stands at the origin facing +Z. */
 export const CAMERA_PRESETS: CameraPreset[] = [
-  { id: 'front', label: 'Front', position: v(0, 1.0, 3.4), target: v(0, 0.95, 0) },
-  { id: 'back', label: 'Back', position: v(0, 1.0, -3.4), target: v(0, 0.95, 0) },
-  { id: 'left', label: 'Left', position: v(3.4, 1.0, 0), target: v(0, 0.95, 0) },
-  { id: 'right', label: 'Right', position: v(-3.4, 1.0, 0), target: v(0, 0.95, 0) },
-  { id: 'highAngle', label: 'High Angle', position: v(1.6, 3.6, 2.6), target: v(0, 0.85, 0) },
-  { id: 'lowAngle', label: 'Low Angle', position: v(1.3, 0.25, 3.0), target: v(0, 1.0, 0) },
-  { id: 'threeQuarter', label: 'Three Quarter', position: v(1.95, 1.15, 2.78), target: v(0, 0.95, 0) },
+  { id: 'front', label: '正面', position: v(0, 1.0, 3.4), target: v(0, 0.95, 0) },
+  { id: 'back', label: '背面', position: v(0, 1.0, -3.4), target: v(0, 0.95, 0) },
+  { id: 'left', label: '左側面', position: v(3.4, 1.0, 0), target: v(0, 0.95, 0) },
+  { id: 'right', label: '右側面', position: v(-3.4, 1.0, 0), target: v(0, 0.95, 0) },
+  { id: 'highAngle', label: 'ハイアングル', position: v(1.6, 3.6, 2.6), target: v(0, 0.85, 0) },
+  { id: 'lowAngle', label: 'ローアングル', position: v(1.3, 0.25, 3.0), target: v(0, 1.0, 0) },
+  { id: 'threeQuarter', label: '斜め前', position: v(1.95, 1.15, 2.78), target: v(0, 0.95, 0) },
 ]
 
 export const CAMERA_PRESET_MAP: Record<CameraPresetId, CameraPreset> = Object.fromEntries(

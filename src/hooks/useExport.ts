@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getExportSize } from '../constants/aspectRatios'
+import { UI } from '../constants/uiText'
 import { useAppStore } from '../store'
 import { canCopyImages, copyImageBlob } from '../utils/clipboard'
 import { buildExportFilename, downloadBlob } from '../utils/download'
@@ -35,7 +36,7 @@ export function useExport(resetAfterMs = 3000) {
 
   const renderCurrentView = useCallback(async (): Promise<Blob> => {
     const { exportRenderer, aspectRatio, exportScale } = useAppStore.getState()
-    if (!exportRenderer) throw new Error('The 3D view is not ready yet')
+    if (!exportRenderer) throw new Error(UI.export.notReady)
     const { width, height } = getExportSize(aspectRatio, exportScale)
     return exportRenderer({ width, height })
   }, [])
@@ -49,7 +50,7 @@ export function useExport(resetAfterMs = 3000) {
         await consume(blob)
         flash({ kind: 'success', message: successMessage })
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Export failed'
+        const message = error instanceof Error ? error.message : UI.export.failed
         flash({ kind: 'error', message })
       } finally {
         setExporting(false)
@@ -65,12 +66,12 @@ export function useExport(resetAfterMs = 3000) {
         const { aspectRatio, pose, activeCameraPreset } = useAppStore.getState()
         downloadBlob(blob, buildExportFilename([pose.presetId, activeCameraPreset, aspectRatio]))
       },
-      'PNG saved',
+      UI.export.saved,
     )
   }, [run])
 
   const copyPng = useCallback(() => {
-    return run('copy', copyImageBlob, 'Image copied to clipboard')
+    return run('copy', copyImageBlob, UI.export.copied)
   }, [run])
 
   return { status, downloadPng, copyPng, canCopyImage: canCopyImages() }

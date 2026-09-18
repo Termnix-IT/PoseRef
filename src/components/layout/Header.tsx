@@ -1,3 +1,4 @@
+import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
 import { Button } from '../ui/Button'
 
@@ -20,13 +21,13 @@ export function Header() {
         </div>
         <h1 className="header__title">PoseRef</h1>
       </div>
-      <span className="header__tagline">画像生成AI向け 構図・ポーズ参考画像メーカー</span>
+      <span className="header__tagline">{UI.app.tagline}</span>
       <div className="header__spacer" />
       <span className="header__status" aria-live="polite">
-        {isExporting ? 'Rendering...' : null}
+        {isExporting ? UI.app.rendering : null}
       </span>
-      <Button size="sm" onClick={resetAll} title="Reset pose, character, camera, FOV and aspect ratio">
-        Reset All
+      <Button size="sm" onClick={resetAll} title={UI.app.resetAllTitle}>
+        {UI.app.resetAll}
       </Button>
     </header>
   )

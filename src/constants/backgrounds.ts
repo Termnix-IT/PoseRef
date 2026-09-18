@@ -3,7 +3,7 @@ import type { BackgroundId, BackgroundOption } from '../types'
 export const BACKGROUNDS: BackgroundOption[] = [
   {
     id: 'white',
-    label: 'White',
+    label: '白',
     color: '#ffffff',
     gridCellColor: '#d4d4d4',
     gridSectionColor: '#adadad',
@@ -11,7 +11,7 @@ export const BACKGROUNDS: BackgroundOption[] = [
   },
   {
     id: 'gray',
-    label: 'Gray',
+    label: 'グレー',
     color: '#7d7d7d',
     gridCellColor: '#8f8f8f',
     gridSectionColor: '#a9a9a9',
@@ -19,7 +19,7 @@ export const BACKGROUNDS: BackgroundOption[] = [
   },
   {
     id: 'black',
-    label: 'Black',
+    label: '黒',
     color: '#000000',
     gridCellColor: '#2c2c2c',
     gridSectionColor: '#4a4a4a',
@@ -27,7 +27,7 @@ export const BACKGROUNDS: BackgroundOption[] = [
   },
   {
     id: 'transparent',
-    label: 'Transparent',
+    label: '透過',
     color: null,
     gridCellColor: '#8a8a8a',
     gridSectionColor: '#a4a4a4',

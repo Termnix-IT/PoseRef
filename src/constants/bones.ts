@@ -9,22 +9,22 @@ export const HIPS_BASE_Y = 0.94
  * Limb meshes extend along local -Y from their pivot.
  */
 export const BONES: BoneDef[] = [
-  { id: 'hips', label: 'Hips', parent: null, offset: { x: 0, y: HIPS_BASE_Y, z: 0 } },
-  { id: 'chest', label: 'Chest', parent: 'hips', offset: { x: 0, y: 0.07, z: 0 } },
-  { id: 'neck', label: 'Neck', parent: 'chest', offset: { x: 0, y: 0.43, z: 0 } },
-  { id: 'head', label: 'Head', parent: 'neck', offset: { x: 0, y: 0.08, z: 0 } },
-  { id: 'leftShoulder', label: 'L Shoulder', parent: 'chest', offset: { x: 0.07, y: 0.38, z: 0 } },
-  { id: 'rightShoulder', label: 'R Shoulder', parent: 'chest', offset: { x: -0.07, y: 0.38, z: 0 } },
-  { id: 'leftUpperArm', label: 'L Upper Arm', parent: 'leftShoulder', offset: { x: 0.14, y: 0, z: 0 } },
-  { id: 'rightUpperArm', label: 'R Upper Arm', parent: 'rightShoulder', offset: { x: -0.14, y: 0, z: 0 } },
-  { id: 'leftForearm', label: 'L Forearm', parent: 'leftUpperArm', offset: { x: 0, y: -0.28, z: 0 } },
-  { id: 'rightForearm', label: 'R Forearm', parent: 'rightUpperArm', offset: { x: 0, y: -0.28, z: 0 } },
-  { id: 'leftHand', label: 'L Hand', parent: 'leftForearm', offset: { x: 0, y: -0.26, z: 0 } },
-  { id: 'rightHand', label: 'R Hand', parent: 'rightForearm', offset: { x: 0, y: -0.26, z: 0 } },
-  { id: 'leftThigh', label: 'L Thigh', parent: 'hips', offset: { x: 0.095, y: -0.06, z: 0 } },
-  { id: 'rightThigh', label: 'R Thigh', parent: 'hips', offset: { x: -0.095, y: -0.06, z: 0 } },
-  { id: 'leftLowerLeg', label: 'L Lower Leg', parent: 'leftThigh', offset: { x: 0, y: -0.4, z: 0 } },
-  { id: 'rightLowerLeg', label: 'R Lower Leg', parent: 'rightThigh', offset: { x: 0, y: -0.4, z: 0 } },
+  { id: 'hips', label: '腰', parent: null, offset: { x: 0, y: HIPS_BASE_Y, z: 0 } },
+  { id: 'chest', label: '胸', parent: 'hips', offset: { x: 0, y: 0.07, z: 0 } },
+  { id: 'neck', label: '首', parent: 'chest', offset: { x: 0, y: 0.43, z: 0 } },
+  { id: 'head', label: '頭', parent: 'neck', offset: { x: 0, y: 0.08, z: 0 } },
+  { id: 'leftShoulder', label: '左肩', parent: 'chest', offset: { x: 0.07, y: 0.38, z: 0 } },
+  { id: 'rightShoulder', label: '右肩', parent: 'chest', offset: { x: -0.07, y: 0.38, z: 0 } },
+  { id: 'leftUpperArm', label: '左上腕', parent: 'leftShoulder', offset: { x: 0.14, y: 0, z: 0 } },
+  { id: 'rightUpperArm', label: '右上腕', parent: 'rightShoulder', offset: { x: -0.14, y: 0, z: 0 } },
+  { id: 'leftForearm', label: '左前腕', parent: 'leftUpperArm', offset: { x: 0, y: -0.28, z: 0 } },
+  { id: 'rightForearm', label: '右前腕', parent: 'rightUpperArm', offset: { x: 0, y: -0.28, z: 0 } },
+  { id: 'leftHand', label: '左手', parent: 'leftForearm', offset: { x: 0, y: -0.26, z: 0 } },
+  { id: 'rightHand', label: '右手', parent: 'rightForearm', offset: { x: 0, y: -0.26, z: 0 } },
+  { id: 'leftThigh', label: '左太もも', parent: 'hips', offset: { x: 0.095, y: -0.06, z: 0 } },
+  { id: 'rightThigh', label: '右太もも', parent: 'hips', offset: { x: -0.095, y: -0.06, z: 0 } },
+  { id: 'leftLowerLeg', label: '左すね', parent: 'leftThigh', offset: { x: 0, y: -0.4, z: 0 } },
+  { id: 'rightLowerLeg', label: '右すね', parent: 'rightThigh', offset: { x: 0, y: -0.4, z: 0 } },
 ]
 
 export const BONE_MAP: Record<BoneId, BoneDef> = Object.fromEntries(
@@ -42,12 +42,12 @@ export function childrenOf(boneId: BoneId): BoneDef[] {
 /** Layout used by the bone picker UI: center bones, then left/right pairs. */
 export const BONE_PICKER_CENTER: BoneId[] = ['head', 'neck', 'chest', 'hips']
 export const BONE_PICKER_PAIRS: Array<{ label: string; left: BoneId; right: BoneId }> = [
-  { label: 'Shoulder', left: 'leftShoulder', right: 'rightShoulder' },
-  { label: 'Upper Arm', left: 'leftUpperArm', right: 'rightUpperArm' },
-  { label: 'Forearm', left: 'leftForearm', right: 'rightForearm' },
-  { label: 'Hand', left: 'leftHand', right: 'rightHand' },
-  { label: 'Thigh', left: 'leftThigh', right: 'rightThigh' },
-  { label: 'Lower Leg', left: 'leftLowerLeg', right: 'rightLowerLeg' },
+  { label: '肩', left: 'leftShoulder', right: 'rightShoulder' },
+  { label: '上腕', left: 'leftUpperArm', right: 'rightUpperArm' },
+  { label: '前腕', left: 'leftForearm', right: 'rightForearm' },
+  { label: '手', left: 'leftHand', right: 'rightHand' },
+  { label: '太もも', left: 'leftThigh', right: 'rightThigh' },
+  { label: 'すね', left: 'leftLowerLeg', right: 'rightLowerLeg' },
 ]
 
 const ZERO: Vec3 = { x: 0, y: 0, z: 0 }
@@ -93,10 +93,10 @@ export const MANNEQUIN_PARTS: PartDef[] = [
 ]
 
 export const MANNEQUIN_COLORS: Array<{ id: string; label: string; value: string }> = [
-  { id: 'light', label: 'Light', value: '#c9c9c9' },
-  { id: 'mid', label: 'Mid', value: '#8e8e8e' },
-  { id: 'dark', label: 'Dark', value: '#4f4f4f' },
-  { id: 'white', label: 'White', value: '#f0f0f0' },
+  { id: 'light', label: '明るいグレー', value: '#c9c9c9' },
+  { id: 'mid', label: 'グレー', value: '#8e8e8e' },
+  { id: 'dark', label: 'ダークグレー', value: '#4f4f4f' },
+  { id: 'white', label: '白', value: '#f0f0f0' },
 ]
 
 export const DEFAULT_MANNEQUIN_COLOR = MANNEQUIN_COLORS[0].value

@@ -54,16 +54,38 @@ export interface PartDef {
 export type PosePresetId =
   | 'tPose'
   | 'standing'
+  | 'handsOnHips'
   | 'armsCrossed'
-  | 'peaceSign'
-  | 'running'
-  | 'sitting'
+  | 'handsBehindBack'
+  | 'modelPose'
   | 'lookingBack'
+  | 'peaceSign'
+  | 'waving'
+  | 'pointing'
+  | 'thinking'
+  | 'salute'
+  | 'cheering'
+  | 'handsBehindHead'
+  | 'walking'
+  | 'running'
+  | 'jumping'
   | 'fightingPose'
+  | 'sitting'
+  | 'kneeHug'
+  | 'kneeling'
+  | 'seiza'
+  | 'crouching'
+  | 'lyingDown'
+
+export type PoseGroupId = 'standing' | 'gesture' | 'action' | 'sitting'
 
 export interface PosePreset {
   id: PosePresetId
+  /** Japanese label shown in the UI. */
   label: string
+  /** English label used in the English prompt. */
+  labelEn: string
+  group: PoseGroupId
   /** Bones not listed default to zero rotation. */
   bones: Partial<BoneRotations>
   /** Extra offset applied to the hips root (e.g. lowering the body when sitting). */

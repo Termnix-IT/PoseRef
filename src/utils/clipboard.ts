@@ -1,3 +1,5 @@
+import { UI } from '../constants/uiText'
+
 function copyTextLegacy(text: string): void {
   const textarea = document.createElement('textarea')
   textarea.value = text
@@ -12,7 +14,7 @@ function copyTextLegacy(text: string): void {
   } finally {
     textarea.remove()
   }
-  if (!ok) throw new Error('Clipboard copy failed')
+  if (!ok) throw new Error(UI.export.clipboardFailed)
 }
 
 /** Copies text using the async Clipboard API, falling back to execCommand when it is unavailable or denied. */
@@ -33,6 +35,6 @@ export function canCopyImages(): boolean {
 }
 
 export async function copyImageBlob(blob: Blob): Promise<void> {
-  if (!canCopyImages()) throw new Error('Image clipboard is not supported in this browser')
+  if (!canCopyImages()) throw new Error(UI.export.imageClipboardUnsupported)
   await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
 }

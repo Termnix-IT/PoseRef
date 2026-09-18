@@ -1,4 +1,5 @@
 import { ASPECT_RATIOS, getExportSize } from '../../constants/aspectRatios'
+import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
 import { Section } from '../ui/Section'
 import { SegmentedControl } from '../ui/SegmentedControl'
@@ -10,11 +11,9 @@ export function AspectRatioPanel() {
   const size = getExportSize(aspectRatio, exportScale)
 
   return (
-    <Section title="Aspect Ratio" subtitle={aspectRatio}>
-      <SegmentedControl options={ASPECT_RATIOS} value={aspectRatio} onChange={setAspectRatio} ariaLabel="Aspect ratio" />
-      <p className="hint hint--mono">
-        Export size: {size.width} {'\u00D7'} {size.height} px
-      </p>
+    <Section title={UI.aspect.title} subtitle={aspectRatio}>
+      <SegmentedControl options={ASPECT_RATIOS} value={aspectRatio} onChange={setAspectRatio} ariaLabel={UI.aspect.title} />
+      <p className="hint hint--mono">{UI.aspect.exportSize(size.width, size.height)}</p>
     </Section>
   )
 }

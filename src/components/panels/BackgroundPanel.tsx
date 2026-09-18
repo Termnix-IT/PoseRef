@@ -1,4 +1,5 @@
 import { BACKGROUNDS, BACKGROUND_MAP } from '../../constants/backgrounds'
+import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
 import { Section } from '../ui/Section'
 import { SegmentedControl } from '../ui/SegmentedControl'
@@ -13,11 +14,11 @@ export function BackgroundPanel() {
   const setShowShadow = useAppStore((state) => state.setShowShadow)
 
   return (
-    <Section title="Background" subtitle={BACKGROUND_MAP[background].label}>
-      <SegmentedControl options={BACKGROUNDS} value={background} onChange={setBackground} ariaLabel="Background" />
+    <Section title={UI.background.title} subtitle={BACKGROUND_MAP[background].label}>
+      <SegmentedControl options={BACKGROUNDS} value={background} onChange={setBackground} ariaLabel={UI.background.title} />
       <div className="toggle-row">
-        <Toggle label="Floor grid" checked={showGrid} onChange={setShowGrid} />
-        <Toggle label="Ground shadow" checked={showShadow} onChange={setShowShadow} />
+        <Toggle label={UI.background.grid} checked={showGrid} onChange={setShowGrid} />
+        <Toggle label={UI.background.shadow} checked={showShadow} onChange={setShowShadow} />
       </div>
     </Section>
   )

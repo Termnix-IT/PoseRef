@@ -1,5 +1,6 @@
 import { BONE_MAP } from '../../constants/bones'
-import { POSE_PRESETS, POSE_PRESET_MAP } from '../../constants/posePresets'
+import { POSE_GROUPS, POSE_PRESET_MAP, posePresetsByGroup } from '../../constants/posePresets'
+import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
 import type { BoneId } from '../../types'
 import { AXES } from '../../utils/math'
@@ -16,35 +17,41 @@ export function PosePanel() {
   const resetPose = useAppStore((state) => state.resetPose)
   const selectedBone = useAppStore((state) => state.selectedBone)
   const selectBone = useAppStore((state) => state.selectBone)
-  const subtitle = presetId === 'custom' ? 'Custom' : POSE_PRESET_MAP[presetId].label
+  const subtitle = presetId === 'custom' ? UI.common.custom : POSE_PRESET_MAP[presetId].label
 
   return (
     <Section
-      title="Pose"
+      title={UI.pose.title}
       subtitle={subtitle}
       actions={
         <Button size="sm" variant="ghost" onClick={resetPose}>
-          Reset
+          {UI.common.reset}
         </Button>
       }
     >
       <div className="control-group">
-        <div className="control-group__label">Preset</div>
-        <div className="preset-grid preset-grid--2">
-          {POSE_PRESETS.map((preset) => (
-            <Button
-              key={preset.id}
-              size="sm"
-              active={presetId === preset.id}
-              onClick={() => applyPosePreset(preset.id)}
-            >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
+        <div className="control-group__label">{UI.pose.preset}</div>
+        {POSE_GROUPS.map((group) => (
+          <div key={group.id} className="preset-group">
+            <div className="preset-group__label">{group.label}</div>
+            <div className="preset-grid preset-grid--3">
+              {posePresetsByGroup(group.id).map((preset) => (
+                <Button
+                  key={preset.id}
+                  size="sm"
+                  active={presetId === preset.id}
+                  title={`${preset.label} / ${preset.labelEn}`}
+                  onClick={() => applyPosePreset(preset.id)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
       <div className="control-group">
-        <div className="control-group__label">Bone</div>
+        <div className="control-group__label">{UI.pose.bone}</div>
         <BonePicker selected={selectedBone} onSelect={selectBone} />
       </div>
       <BoneRotationEditor bone={selectedBone} />
@@ -58,21 +65,21 @@ function BoneRotationEditor({ bone }: { bone: BoneId | null }) {
   const resetBone = useAppStore((state) => state.resetBone)
 
   if (!bone || !rotation) {
-    return <p className="hint">Select a bone above, or click a body part in the 3D view, to edit its rotation.</p>
+    return <p className="hint">{UI.pose.selectHint}</p>
   }
 
   return (
     <div className="control-group">
       <div className="control-group__label">
-        <span>{BONE_MAP[bone].label} Rotation</span>
+        <span>{UI.pose.rotationOf(BONE_MAP[bone].label)}</span>
         <Button size="sm" variant="ghost" onClick={() => resetBone(bone)}>
-          Reset
+          {UI.common.reset}
         </Button>
       </div>
       {AXES.map((axis) => (
         <SliderField
           key={axis}
-          label={`${axis.toUpperCase()} Rotation`}
+          label={UI.pose.axisRotation(axis.toUpperCase())}
           value={rotation[axis]}
           min={-180}
           max={180}
