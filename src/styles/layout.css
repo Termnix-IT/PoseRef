@@ -164,15 +164,40 @@
 .prompt-panel {
   border-top: 1px solid var(--border);
   background: var(--panel);
-  padding: 12px 16px 14px;
+  padding: 8px 16px;
 }
 
-.prompt-panel__header {
+.prompt-panel.is-open {
+  padding-bottom: 14px;
+}
+
+.prompt-panel__bar {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+}
+
+.prompt-panel__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: -6px;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.prompt-panel__toggle:hover {
+  background: var(--panel-2);
+}
+
+.prompt-panel.is-open .section__chevron {
+  transform: rotate(90deg);
 }
 
 .prompt-panel__title {
@@ -181,16 +206,54 @@
   letter-spacing: 0.02em;
 }
 
+.prompt-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.prompt-panel__actions .btn {
+  min-width: 108px;
+}
+
+.prompt-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.prompt-panel__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .prompt-panel__desc {
   color: var(--text-muted);
   font-size: 12px;
-  margin-top: 2px;
+  min-width: 0;
 }
 
-.prompt-panel__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.prompt-panel__text {
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.prompt-panel__text:focus {
+  border-color: var(--accent);
+  outline: none;
 }
 
 @media (max-width: 960px) {
@@ -218,8 +281,10 @@
     overflow: visible;
   }
 
-  .prompt-panel__grid {
-    grid-template-columns: 1fr;
+  .prompt-panel__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .header__tagline {

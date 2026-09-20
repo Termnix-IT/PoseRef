@@ -88,8 +88,12 @@ export const UI = {
     description:
       '書き出したPNGと一緒に画像生成AIへ渡すプロンプトです。ポーズと構図だけを参照させ、マネキンのデザインは反映させません。',
     appendDetails: '構図情報を追記',
+    language: 'プロンプトの言語',
+    copy: 'コピー',
     copied: 'コピーしました',
     copyFailed: 'コピーに失敗しました',
+    expand: 'AIプロンプト生成を開く',
+    collapse: 'AIプロンプト生成を閉じる',
     textareaOf: (language: string) => `${language}プロンプト`,
   },
 } as const
