@@ -1,5 +1,5 @@
 import { Vector2 } from 'three'
-import type { Material, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
+import type { Material, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
 import { UI } from '../constants/uiText'
 
 export interface RenderPngParams {
@@ -19,23 +19,33 @@ function hasEmissive(material: Material): material is MeshStandardMaterial {
 }
 
 /**
- * Temporarily removes selection highlights (emissive glow) from mannequin parts
- * so they never end up in the exported image. Returns a restore function.
+ * Temporarily removes everything that belongs to the editing UI rather than the
+ * picture: the emissive glow of the selected bone and the joint drag handles.
+ * Returns a function that puts the scene back the way it was.
  */
-function suppressHighlights(scene: Scene): () => void {
-  const saved: Array<{ material: MeshStandardMaterial; intensity: number }> = []
+function suppressEditingVisuals(scene: Scene): () => void {
+  const savedMaterials: Array<{ material: MeshStandardMaterial; intensity: number }> = []
+  const hidden: Object3D[] = []
   scene.traverse((object) => {
+    if (object.userData.poseHandle) {
+      if (object.visible) {
+        object.visible = false
+        hidden.push(object)
+      }
+      return
+    }
     if (!isMesh(object) || !object.userData.boneId) return
     const materials = Array.isArray(object.material) ? object.material : [object.material]
     for (const material of materials) {
       if (hasEmissive(material) && material.emissiveIntensity > 0) {
-        saved.push({ material, intensity: material.emissiveIntensity })
+        savedMaterials.push({ material, intensity: material.emissiveIntensity })
         material.emissiveIntensity = 0
       }
     }
   })
   return () => {
-    for (const entry of saved) entry.material.emissiveIntensity = entry.intensity
+    for (const entry of savedMaterials) entry.material.emissiveIntensity = entry.intensity
+    for (const object of hidden) object.visible = true
   }
 }
 
@@ -57,7 +67,7 @@ export function renderScenePng({ gl, scene, camera, width, height }: RenderPngPa
   const prevSize = gl.getSize(new Vector2())
   const prevPixelRatio = gl.getPixelRatio()
   const prevAspect = camera.aspect
-  const restoreHighlights = suppressHighlights(scene)
+  const restoreEditingVisuals = suppressEditingVisuals(scene)
 
   const output = document.createElement('canvas')
   output.width = width
@@ -74,7 +84,7 @@ export function renderScenePng({ gl, scene, camera, width, height }: RenderPngPa
     // Copy the freshly rendered frame before the renderer is resized back.
     context.drawImage(gl.domElement, 0, 0, width, height)
   } finally {
-    restoreHighlights()
+    restoreEditingVisuals()
     gl.setPixelRatio(prevPixelRatio)
     gl.setSize(prevSize.x, prevSize.y, false)
     camera.aspect = prevAspect

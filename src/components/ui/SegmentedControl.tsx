@@ -8,11 +8,19 @@ export interface SegmentedControlProps<T extends string> {
   value: T
   onChange: (id: T) => void
   ariaLabel?: string
+  /** Narrow variant that sizes to its content, for use in the header. */
+  compact?: boolean
 }
 
-export function SegmentedControl<T extends string>({ options, value, onChange, ariaLabel }: SegmentedControlProps<T>) {
+export function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+  compact = false,
+}: SegmentedControlProps<T>) {
   return (
-    <div className="segmented" role="group" aria-label={ariaLabel}>
+    <div className={`segmented${compact ? ' segmented--compact' : ''}`} role="group" aria-label={ariaLabel}>
       {options.map((option) => {
         const active = option.id === value
         return (

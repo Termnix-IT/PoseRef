@@ -2,9 +2,12 @@ import { useCursor } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { useMemo, useState } from 'react'
 import { BONE_MAP, MANNEQUIN_PARTS, ROOT_BONE, childrenOf } from '../../constants/bones'
+import { usePoseDrag } from '../../hooks/usePoseDrag'
 import { useAppStore } from '../../store'
 import type { BoneId, PartDef, PartShape } from '../../types'
 import { degToRad } from '../../utils/math'
+import { BoneHandle } from './BoneHandle'
+import { PoseDragContext, usePoseDragContext } from './poseDragContext'
 
 const HIGHLIGHT_COLOR = '#4f8cff'
 const UNIT_SCALE: [number, number, number] = [1, 1, 1]
@@ -14,16 +17,21 @@ const ZERO_ROTATION: [number, number, number] = [0, 0, 0]
 export function Mannequin() {
   const position = useAppStore((state) => state.character.position)
   const yaw = useAppStore((state) => state.character.yaw)
+  const drag = usePoseDrag()
+
   return (
-    <group position={[position.x, position.y, position.z]} rotation={[0, degToRad(yaw), 0]}>
-      <BoneNode id={ROOT_BONE} />
-    </group>
+    <PoseDragContext.Provider value={drag}>
+      <group position={[position.x, position.y, position.z]} rotation={[0, degToRad(yaw), 0]}>
+        <BoneNode id={ROOT_BONE} />
+      </group>
+    </PoseDragContext.Provider>
   )
 }
 
 function BoneNode({ id }: { id: BoneId }) {
   const rotation = useAppStore((state) => state.pose.bones[id])
   const rootOffset = useAppStore((state) => (id === ROOT_BONE ? state.pose.rootOffset : null))
+  const poseMode = useAppStore((state) => state.interactionMode === 'pose')
   const children = useMemo(() => childrenOf(id), [id])
   const parts = useMemo(() => MANNEQUIN_PARTS.filter((part) => part.bone === id), [id])
   const { offset } = BONE_MAP[id]
@@ -34,10 +42,16 @@ function BoneNode({ id }: { id: BoneId }) {
   ]
 
   return (
-    <group position={position} rotation={[degToRad(rotation.x), degToRad(rotation.y), degToRad(rotation.z)]}>
+    <group
+      position={position}
+      rotation={[degToRad(rotation.x), degToRad(rotation.y), degToRad(rotation.z)]}
+      // Lets the drag interaction find which bone a grabbed mesh belongs to.
+      userData={{ boneGroup: id }}
+    >
       {parts.map((part, index) => (
         <MannequinPart key={`${id}-${index}`} part={part} />
       ))}
+      {poseMode ? <BoneHandle id={id} /> : null}
       {children.map((child) => (
         <BoneNode key={child.id} id={child.id} />
       ))}
@@ -49,9 +63,11 @@ function MannequinPart({ part }: { part: PartDef }) {
   const boneId = part.bone
   const selected = useAppStore((state) => state.selectedBone === boneId)
   const color = useAppStore((state) => state.character.color)
+  const poseMode = useAppStore((state) => state.interactionMode === 'pose')
   const selectBone = useAppStore((state) => state.selectBone)
+  const drag = usePoseDragContext()
   const [hovered, setHovered] = useState(false)
-  useCursor(hovered)
+  useCursor(hovered, poseMode ? 'grab' : 'pointer')
 
   const scale: [number, number, number] =
     part.shape.kind === 'ellipsoid'
@@ -68,6 +84,11 @@ function MannequinPart({ part }: { part: PartDef }) {
   const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
     setHovered(true)
+    drag?.onPointerOver()
+  }
+  const handlePointerOut = () => {
+    setHovered(false)
+    drag?.onPointerOut()
   }
 
   return (
@@ -79,8 +100,9 @@ function MannequinPart({ part }: { part: PartDef }) {
       receiveShadow
       userData={{ boneId }}
       onClick={handleClick}
+      onPointerDown={drag?.onPointerDown}
       onPointerOver={handlePointerOver}
-      onPointerOut={() => setHovered(false)}
+      onPointerOut={handlePointerOut}
     >
       <PartGeometry shape={part.shape} />
       <meshStandardMaterial

@@ -1,4 +1,4 @@
-import type { BoneDef, BoneId, BoneRotations, PartDef, Vec3 } from '../types'
+import type { BoneDef, BoneHandleDef, BoneId, BoneRotations, PartDef, Vec3 } from '../types'
 
 /** Base height of the hips pivot above the floor (meters). */
 export const HIPS_BASE_Y = 0.94
@@ -49,6 +49,31 @@ export const BONE_PICKER_PAIRS: Array<{ label: string; left: BoneId; right: Bone
   { label: '太もも', left: 'leftThigh', right: 'rightThigh' },
   { label: 'すね', left: 'leftLowerLeg', right: 'rightLowerLeg' },
 ]
+
+/**
+ * Drag handles, one per bone, in that bone's local space. Each sits at the far
+ * end of its bone, so grabbing the elbow swings the upper arm and grabbing the
+ * wrist swings the forearm. The torso handles are moved to the sternum and the
+ * nape where nothing hides them. The hips have no handle: rotating them turns
+ * the whole body, which is what the pelvis mesh and the Yaw slider are for.
+ */
+export const BONE_HANDLES: Partial<Record<BoneId, BoneHandleDef>> = {
+  chest: { offset: { x: 0, y: 0.3, z: 0.13 }, radius: 0.05 },
+  neck: { offset: { x: 0, y: 0.05, z: -0.085 }, radius: 0.042 },
+  head: { offset: { x: 0, y: 0.06, z: 0.18 }, radius: 0.042 },
+  leftShoulder: { offset: { x: 0.14, y: 0, z: 0 }, radius: 0.058 },
+  rightShoulder: { offset: { x: -0.14, y: 0, z: 0 }, radius: 0.058 },
+  leftUpperArm: { offset: { x: 0, y: -0.28, z: 0 }, radius: 0.058 },
+  rightUpperArm: { offset: { x: 0, y: -0.28, z: 0 }, radius: 0.058 },
+  leftForearm: { offset: { x: 0, y: -0.26, z: 0 }, radius: 0.052 },
+  rightForearm: { offset: { x: 0, y: -0.26, z: 0 }, radius: 0.052 },
+  leftHand: { offset: { x: 0, y: -0.18, z: 0 }, radius: 0.04 },
+  rightHand: { offset: { x: 0, y: -0.18, z: 0 }, radius: 0.04 },
+  leftThigh: { offset: { x: 0, y: -0.4, z: 0 }, radius: 0.078 },
+  rightThigh: { offset: { x: 0, y: -0.4, z: 0 }, radius: 0.078 },
+  leftLowerLeg: { offset: { x: 0, y: -0.42, z: 0 }, radius: 0.06 },
+  rightLowerLeg: { offset: { x: 0, y: -0.42, z: 0 }, radius: 0.06 },
+}
 
 const ZERO: Vec3 = { x: 0, y: 0, z: 0 }
 

@@ -1,10 +1,12 @@
 import type { StateCreator } from 'zustand'
 import { DEFAULT_ASPECT_RATIO } from '../../constants/aspectRatios'
 import { DEFAULT_BACKGROUND } from '../../constants/backgrounds'
-import type { AspectRatioId, BackgroundId } from '../../types'
+import type { AspectRatioId, BackgroundId, InteractionMode } from '../../types'
 import type { AppStore } from '../index'
 
 export interface ViewSlice {
+  interactionMode: InteractionMode
+  setInteractionMode: (mode: InteractionMode) => void
   aspectRatio: AspectRatioId
   background: BackgroundId
   showGrid: boolean
@@ -17,6 +19,8 @@ export interface ViewSlice {
 }
 
 export const createViewSlice: StateCreator<AppStore, [], [], ViewSlice> = (set) => ({
+  interactionMode: 'camera',
+  setInteractionMode: (interactionMode) => set({ interactionMode }),
   aspectRatio: DEFAULT_ASPECT_RATIO,
   background: DEFAULT_BACKGROUND,
   showGrid: true,

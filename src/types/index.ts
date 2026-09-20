@@ -161,3 +161,19 @@ export interface ExportOptions {
 export type ExportRenderer = (options: ExportOptions) => Promise<Blob>
 
 export type PromptLanguage = 'ja' | 'en'
+
+/**
+ * What a left drag on the mannequin does.
+ * 'camera' always orbits; 'pose' rotates the grabbed bone instead.
+ */
+export type InteractionMode = 'camera' | 'pose'
+
+export interface BoneHandleDef {
+  /** Position of the handle in the bone's local space. */
+  offset: Vec3
+  /**
+   * Sphere radius. Chosen per joint so the handle stays wider than the limb
+   * around it: a handle buried inside the body is neither visible nor clickable.
+   */
+  radius: number
+}

@@ -33,11 +33,28 @@ npm run preview   # ビルド結果のプレビュー
 | 右 | ポーズ / キャラクター / カメラ / アスペクト比 / 背景 / 書き出し |
 | 下 | AIプロンプト生成（日本語プロンプトをコピー / 英語プロンプトをコピー） |
 
+### 操作モード
+
+ヘッダーの「カメラ操作 / ポーズ操作」で、3Dビュー上の左ドラッグが何をするかを切り替えます。
+
+カメラ操作モードでは、どこをドラッグしてもカメラが動きます。ポーズが崩れる心配なくアングルを探せます。
+ポーズ操作モードでは、マネキンの体や青いハンドルをドラッグすると、その部位のボーンが回転します。
+背景をドラッグしたときはこのモードでもカメラが回るので、アングルを変えながらポーズを直せます。
+
+ハンドルはボーンの先端に置かれた青い球で、ポーズ操作モードのときだけ表示されます。
+肘のハンドルを引くと上腕が、手首のハンドルを引くと前腕が振られます。顔の前のハンドルは首の向き、
+胸のハンドルは上半身の傾きに対応します。腰にはハンドルがなく、体全体の向きはキャラクターパネルの
+Yawか、骨盤そのもののドラッグで変えます。
+
+回転は常に画面に対して自然な向きに入ります。画面の奥行き方向へ動かしたいときは、
+いったんカメラを回してからドラッグしてください。
+
 ### 3D ビュー操作
 
-- 左ドラッグ: カメラ回転 / 右ドラッグ: 移動 / ホイール: ズーム
+- 左ドラッグ: カメラ回転（ポーズ操作モードではマネキン上のみ関節回転）/ 右ドラッグ: 移動 / ホイール: ズーム
 - マネキンの部位をクリックするとそのボーンが選択され、右パネルに回転スライダーが表示されます
 - 何もない場所をクリックすると選択解除
+- ハンドルや選択中のハイライトは書き出したPNGには含まれません
 
 ### ポーズプリセット（24種）
 
@@ -53,7 +70,7 @@ npm run preview   # ビルド結果のプレビュー
 
 ### その他の機能
 
-- 16 ボーンの X/Y/Z 回転（スライダー + 数値入力）
+- 16 ボーンの X/Y/Z 回転（スライダー + 数値入力、またはビュー上のドラッグ）
 - キャラクターの位置 (X/Y/Z) と向き (Yaw)、マネキンの色（背景とのコントラスト調整用）
 - カメラプリセット: 正面 / 背面 / 左側面 / 右側面 / ハイアングル / ローアングル / 斜め前
 - 画角 (FOV)、オービット（水平 / 上下 / 距離）、位置 / 注視点の数値指定
@@ -71,14 +88,18 @@ src/
     layout/    Header, Sidebar
     panels/    Pose / Character / Camera / AspectRatio / Background / Export / Prompt
     ui/        Button, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
-    viewport/  Viewport, SceneCanvas, CameraRig, Mannequin, Ground, Lights, SceneBackground, ExportBridge
+    viewport/  Viewport, SceneCanvas, CameraRig, Mannequin, BoneHandle, Ground, Lights,
+               SceneBackground, ExportBridge
   constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds,
                prompts, uiText（UI 文言）
-  hooks/       useFitAspect, useExport, useCopyText
+  hooks/       useFitAspect, useExport, useCopyText, usePoseDrag（ビュー上のドラッグ操作）
   store/       Zustand ストア（slices: character / pose / camera / view / export）
   types/       共通型定義
-  utils/       math, exportPng, composition, promptBuilder, clipboard, download
+  utils/       math, rotation, exportPng, composition, promptBuilder, clipboard, download
 ```
+
+ドラッグ用ハンドルの位置と大きさは `src/constants/bones.ts` の `BONE_HANDLES` で調整します。
+半径は必ずその関節まわりの体より大きくしてください。体に埋まったハンドルは見えず、クリックもできません。
 
 UI の文言は `src/constants/uiText.ts` に集約しています。ポーズを追加する場合は
 `src/constants/posePresets.ts` にプリセットを追記し、`src/types/index.ts` の `PosePresetId` に ID を加えます。

@@ -400,6 +400,16 @@
   color: var(--text);
 }
 
+.segmented--compact {
+  padding: 2px;
+}
+
+.segmented--compact .segmented__item {
+  flex: 0 0 auto;
+  height: 24px;
+  padding: 0 10px;
+}
+
 .segmented__item.is-active {
   background: var(--panel-3);
   color: var(--text);

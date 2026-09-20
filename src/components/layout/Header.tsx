@@ -1,10 +1,19 @@
 import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
+import type { InteractionMode } from '../../types'
 import { Button } from '../ui/Button'
+import { SegmentedControl } from '../ui/SegmentedControl'
+
+const MODE_OPTIONS: Array<{ id: InteractionMode; label: string }> = [
+  { id: 'camera', label: UI.mode.camera },
+  { id: 'pose', label: UI.mode.pose },
+]
 
 export function Header() {
   const resetAll = useAppStore((state) => state.resetAll)
   const isExporting = useAppStore((state) => state.isExporting)
+  const interactionMode = useAppStore((state) => state.interactionMode)
+  const setInteractionMode = useAppStore((state) => state.setInteractionMode)
 
   return (
     <header className="header">
@@ -26,6 +35,13 @@ export function Header() {
       <span className="header__status" aria-live="polite">
         {isExporting ? UI.app.rendering : null}
       </span>
+      <SegmentedControl
+        compact
+        options={MODE_OPTIONS}
+        value={interactionMode}
+        onChange={setInteractionMode}
+        ariaLabel={UI.mode.label}
+      />
       <Button size="sm" onClick={resetAll} title={UI.app.resetAllTitle}>
         {UI.app.resetAll}
       </Button>

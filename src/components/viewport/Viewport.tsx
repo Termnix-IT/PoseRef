@@ -17,6 +17,7 @@ export function Viewport() {
   const aspectRatio = useAppStore((state) => state.aspectRatio)
   const background = useAppStore((state) => state.background)
   const exportScale = useAppStore((state) => state.exportScale)
+  const poseMode = useAppStore((state) => state.interactionMode === 'pose')
   const size = useFitAspect(containerRef, getAspectValue(aspectRatio), VIEWPORT_PADDING)
 
   const option = ASPECT_RATIO_MAP[aspectRatio]
@@ -34,7 +35,7 @@ export function Viewport() {
           </span>
         </div>
       </div>
-      <p className="viewport__hint">{UI.viewport.hint}</p>
+      <p className="viewport__hint">{poseMode ? UI.viewport.hintPose : UI.viewport.hintCamera}</p>
     </div>
   )
 }

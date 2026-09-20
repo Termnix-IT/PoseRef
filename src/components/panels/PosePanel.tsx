@@ -17,6 +17,7 @@ export function PosePanel() {
   const resetPose = useAppStore((state) => state.resetPose)
   const selectedBone = useAppStore((state) => state.selectedBone)
   const selectBone = useAppStore((state) => state.selectBone)
+  const poseMode = useAppStore((state) => state.interactionMode === 'pose')
   const subtitle = presetId === 'custom' ? UI.common.custom : POSE_PRESET_MAP[presetId].label
 
   return (
@@ -53,6 +54,7 @@ export function PosePanel() {
       <div className="control-group">
         <div className="control-group__label">{UI.pose.bone}</div>
         <BonePicker selected={selectedBone} onSelect={selectBone} />
+        {poseMode ? <p className="hint">{UI.mode.hint}</p> : null}
       </div>
       <BoneRotationEditor bone={selectedBone} />
     </Section>
