@@ -35,8 +35,8 @@ async function pngSize(blob: Blob): Promise<{ width: number; height: number }> {
 const handlers: Handlers = {
   getScene: async () => sceneDocumentFromState(useAppStore.getState()),
   setScene: async (doc) => {
-    useAppStore.getState().applySceneDocument(doc)
-    return sceneDocumentFromState(useAppStore.getState())
+    const groundShift = useAppStore.getState().applySceneDocument(doc)
+    return { scene: sceneDocumentFromState(useAppStore.getState()), groundShift }
   },
   renderViews: async ({ views, size }) => {
     const renderer = useAppStore.getState().reviewRenderer

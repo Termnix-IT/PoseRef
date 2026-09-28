@@ -9,7 +9,11 @@ import type { JointReport, ReviewViewId, SceneDocument } from '../types/index.ts
 export interface BridgeMethods {
   getScene: { params: Record<string, never>; result: SceneDocument }
   /** `params` has already been validated and normalized by the server. */
-  setScene: { params: SceneDocument; result: SceneDocument }
+  setScene: {
+    params: SceneDocument
+    /** groundShift: how far the hips were moved up (+) or down (-) to rest on the floor; null if not grounded. */
+    result: { scene: SceneDocument; groundShift: number | null }
+  }
   renderViews: {
     params: { views: ReviewViewId[]; size: number }
     result: { pngBase64: string; width: number; height: number }

@@ -14,7 +14,7 @@ const DEFAULT_VIEW_SIZE = 480
 
 const INSTRUCTIONS = `PoseRef controls a posable mannequin and camera in the user's browser to build pose and composition reference images.
 Call get_pose_spec once before your first set_scene: it explains the bone axes and sign conventions, which are easy to get wrong.
-Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on chin, elbow on knee) or resting on the floor, confirm it with get_joint_positions rather than the picture alone, and only report contact the numbers show. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
+Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on chin, elbow on knee), confirm it with get_joint_positions rather than the picture alone, and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
 
 function text(value: string): CallToolResult {
   return { content: [{ type: 'text', text: value }] }
@@ -79,13 +79,20 @@ function createServer(bridge: BrowserBridge): McpServer {
     {
       title: 'Set pose and camera',
       description:
-        'Applies a pose, character transform, camera and/or aspect ratio to the open PoseRef tab in one undoable step. Omitted sections are left unchanged. Returns the resulting scene. Follow up with render_views to check the result.',
+        'Applies a pose, character transform, camera and/or aspect ratio to the open PoseRef tab in one undoable step. Omitted sections are left unchanged. ' +
+        'When a pose is given, the hips are moved so the body rests on the floor (turn off with pose.ground = false). Returns the resulting scene. Follow up with render_views to check the result.',
       inputSchema: sceneSchema,
     },
     async (scene) => {
       try {
-        const applied = await bridge.request('setScene', { version: 1, ...scene })
-        return text(`Applied. Current scene (bones not listed are 0): ${compactScene(applied)}`)
+        const { scene: applied, groundShift } = await bridge.request('setScene', { version: 1, ...scene })
+        const grounding =
+          groundShift === null
+            ? ''
+            : groundShift === 0
+              ? ' Already resting on the floor.'
+              : ` Grounded: hips moved ${groundShift > 0 ? 'up' : 'down'} by ${Math.abs(groundShift)} m so the lowest body point rests on the floor.`
+        return text(`Applied.${grounding} Current scene (bones not listed are 0): ${compactScene(applied)}`)
       } catch (error) {
         return failure(error)
       }

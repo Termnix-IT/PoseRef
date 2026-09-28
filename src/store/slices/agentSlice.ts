@@ -8,9 +8,12 @@ import type {
   SceneDocument,
   SceneSnapshot,
 } from '../../types'
+import { clamp, round } from '../../utils/math'
 import type { AppStore } from '../index'
 
 const UNDO_LIMIT = 50
+/** Same limits as the server's rootOffset schema. */
+const ROOT_OFFSET_LIMIT = 1.5
 
 export interface AgentSlice {
   agentStatus: AgentBridgeStatus
@@ -29,8 +32,14 @@ export interface AgentSlice {
   /** Records the current scene so the next discrete change can be undone. */
   pushUndo: () => void
   undo: () => void
-  /** Applies an already validated document as one undoable step. */
-  applySceneDocument: (doc: SceneDocument) => void
+  /**
+   * Applies an already validated document as one undoable step. Unless
+   * `pose.ground` is false, the hips are then moved so the body rests on the
+   * floor; returns that vertical shift in meters, or null when not grounded.
+   */
+  applySceneDocument: (doc: SceneDocument) => number | null
+  /** Moves the hips up or down so the lowest body point sits at the character's floor height. */
+  groundPose: () => number | null
 }
 
 function takeSnapshot(state: AppStore): SceneSnapshot {
@@ -127,5 +136,24 @@ export const createAgentSlice: StateCreator<AppStore, [], [], AgentSlice> = (set
       if (doc.aspectRatio) patch.aspectRatio = doc.aspectRatio
       return patch
     })
+    // Part of the same undo step: no snapshot is pushed in between.
+    return doc.pose && doc.pose.ground !== false ? get().groundPose() : null
+  },
+  groundPose: () => {
+    const reader = get().jointReader
+    if (!reader) return null
+    const floor = get().character.position.y
+    const shift = round(floor - reader().lowestY)
+    if (Math.abs(shift) < 0.001) return 0
+    set((state) => ({
+      pose: {
+        ...state.pose,
+        rootOffset: {
+          ...state.pose.rootOffset,
+          y: clamp(round(state.pose.rootOffset.y + shift), -ROOT_OFFSET_LIMIT, ROOT_OFFSET_LIMIT),
+        },
+      },
+    }))
+    return shift
   },
 })

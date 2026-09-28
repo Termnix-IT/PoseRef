@@ -47,8 +47,9 @@ You edit the scene with \`set_scene\` and check the result with \`render_views\`
 1. \`get_scene\` if you need the current state (for small edits use pose.mode "merge").
 2. \`set_scene\` with pose, and camera if the request mentions an angle or composition.
 3. \`render_views\` (current + front + left by default) and compare the picture with the request.
-4. For contact (hand on chin, elbow on knee, hands on the floor) and grounding, call \`get_joint_positions\`
-   with the relevant pairs and adjust until the distances and lowestY say it is right; pictures are easy to misjudge.
+4. For contact (hand on chin, elbow on knee, hands on the floor), call \`get_joint_positions\` with the relevant
+   pairs and adjust until the distances say it is right; pictures are easy to misjudge. Feet-on-floor is handled
+   by set_scene's automatic grounding.
 5. Fix what is wrong and render again. Two or three rounds are usually enough: the user fine-tunes by hand afterwards.
 If a combined pose + camera change keeps failing, settle the pose first, then the camera.
 
@@ -94,11 +95,11 @@ At rest these point down (-Y). With rotation (x, y = 0, z) a limb points at
   hand is 0.02-0.04 m thick, so an elbow resting on a knee is ~0.11 m from it and a palm on the chin is ~0.03-0.06 m.
 
 ## Grounding (pose.rootOffset)
-Standing needs rootOffset.y = 0. When knees or hips bend, lower the hips until the lowest body part
-(sole, knee or buttocks) touches y = 0. \`get_joint_positions\` reports lowestY: subtract it from rootOffset.y to
-land exactly on the floor. Values used by the built-in presets: chair sitting -0.4 (there is
-no chair, so the body floats), one-knee kneeling -0.41, crouching -0.56, seiza -0.58, hugging knees on the
-floor -0.75, lying on the back -0.82, mid-jump +0.25.
+\`set_scene\` grounds the body for you: after applying a pose it raises or lowers the hips so the lowest body
+point (sole, knee, buttocks or back) rests on the floor, and reports how far it moved them. You only need a
+rough rootOffset.y. For a chair pose the feet end up on the floor and the body sits in the air, because there is
+no chair. For jumps or other airborne poses pass \`pose.ground: false\` and set rootOffset.y yourself (a mid-jump
+preset uses +0.25).
 
 ## Camera
 \`camera.position\` and \`camera.target\` are in meters, \`camera.fov\` is the vertical field of view in degrees

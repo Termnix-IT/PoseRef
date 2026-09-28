@@ -48,7 +48,13 @@ export const sceneSchema = z.strictObject({
         .describe('Per-bone local Euler XYZ rotation in degrees. See get_pose_spec for axis conventions.'),
       rootOffset: vec3(RANGES.rootOffset)
         .optional()
-        .describe('Offset of the hips in meters. Lower y for sitting, kneeling or lying poses.'),
+        .describe('Offset of the hips in meters. y is adjusted by grounding unless ground is false.'),
+      ground: z
+        .boolean()
+        .optional()
+        .describe(
+          'Default true: after applying, raise or lower the hips so the lowest body point rests on the floor. Set false for jumps or other airborne poses.',
+        ),
     })
     .optional(),
   character: z

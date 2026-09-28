@@ -180,6 +180,11 @@ export interface SceneDocument {
     mode?: 'replace' | 'merge'
     bones?: Partial<BoneRotations>
     rootOffset?: Vec3
+    /**
+     * Default true: after the pose is applied, the hips are raised or lowered so
+     * the lowest body point rests on the floor. False keeps rootOffset as given.
+     */
+    ground?: boolean
   }
   character?: { yaw?: number; position?: Vec3 }
   camera?: { position?: Vec3; target?: Vec3; fov?: number }
