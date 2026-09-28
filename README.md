@@ -55,13 +55,22 @@ claude mcp add --transport http --scope user poseref http://127.0.0.1:47173/mcp
 
 リポジトリには `.mcp.json` も入れてあるので、このリポジトリの中で Claude Code を起動した場合は登録しなくても使えます
 （初回に使用を許可するかどうかを聞かれます）。
+Claude Code はツールを呼ぶたびに許可を求めることがあります。毎回の確認を省く場合は、`~/.claude/settings.json` の
+`permissions.allow` に `"mcp__poseref"` を加えると、PoseRef のツールすべてが許可されます。
 
 Codex（CLI・IDE 拡張・デスクトップアプリ共通の `~/.codex/config.toml` に追記します）:
 
 ```toml
 [mcp_servers.poseref]
 url = "http://127.0.0.1:47173/mcp"
+
+[mcp_servers.poseref.tools.set_scene]
+approval_mode = "approve"
 ```
+
+Codex は、読み取り専用ではない MCP ツールを呼ぶたびに承認を求めます。`set_scene` は PoseRef の画面だけを変える操作で、
+「元に戻す」で取り消せるので、上の 2 行で毎回の承認を省いています。省かない場合は、ポーズを直すたびに承認することになります。
+また `codex exec` のような非対話の実行では、承認できないため `set_scene` がキャンセルされます。
 
 `POSEREF_PORT` でポートを変えた場合は、登録する URL のポートも合わせて変えてください。
 エージェントは起動時に MCP へ接続するので、PoseRef サーバーを後から起動したときはエージェントを再起動するか、
