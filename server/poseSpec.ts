@@ -103,8 +103,15 @@ The picture is a reference for an image AI, so the pose must read from its silho
   racket. The lead side (for a right-handed person the left arm and left shoulder) faces the target, the chest
   faces 90 degrees away from it, and the head turns toward the target. Turn the character with \`character.yaw\`
   and keep the target direction across the frame.
+- Read camera words in the character's own frame: "from the front" means the camera sees the chest and face side
+  of the body, "from the side" sees a shoulder, "from behind" sees the back. For a side-on action seen from the
+  front, the target is therefore off to one side of the picture (for a right-handed person, on the character's
+  left, which is the image's right), not behind the camera.
+- Never square the body or the head to the camera just to show the face. A head turned toward the target, even
+  in profile, is part of the stance and reads better than a face looking into the lens.
 - In render_views, check that the arms and legs that carry the action do not overlap the torso or each other and
-  do not point at the camera. If they do, turn the character or move the camera before fine-tuning angles.
+  do not point at the camera. If they do, turn the character (often 15-30 degrees of yaw is enough) or move the
+  camera before fine-tuning angles. Do not finish with a readability problem you have noticed; fix it first.
 
 ## Contact with reach (inverse kinematics)
 \`reach\` moves a landmark (effector) onto another landmark or a world point by rotating a chain of bones, so you
