@@ -1,4 +1,4 @@
-import type { ReviewViewId, SceneDocument } from '../types/index.ts'
+import type { JointReport, ReviewViewId, SceneDocument } from '../types/index.ts'
 
 /**
  * Messages between the PoseRef server (which hosts the MCP endpoint) and the
@@ -14,6 +14,7 @@ export interface BridgeMethods {
     params: { views: ReviewViewId[]; size: number }
     result: { pngBase64: string; width: number; height: number }
   }
+  getJoints: { params: Record<string, never>; result: JointReport }
 }
 
 export type BridgeMethod = keyof BridgeMethods

@@ -3,6 +3,7 @@ import { BONE_IDS, createZeroRotations } from '../../constants/bones'
 import type {
   AgentBridgeStatus,
   BoneRotations,
+  JointReader,
   ReviewRenderer,
   SceneDocument,
   SceneSnapshot,
@@ -15,6 +16,8 @@ export interface AgentSlice {
   agentStatus: AgentBridgeStatus
   /** Registered by the 3D view; renders the review views an agent asks for. */
   reviewRenderer: ReviewRenderer | null
+  /** Registered by the 3D view; reads joint landmark positions for agents. */
+  jointReader: JointReader | null
   /**
    * Snapshots taken before discrete scene changes (AI edits, presets, resets).
    * Slider and drag edits are not recorded.
@@ -22,6 +25,7 @@ export interface AgentSlice {
   undoStack: SceneSnapshot[]
   setAgentStatus: (status: AgentBridgeStatus) => void
   registerReviewRenderer: (renderer: ReviewRenderer | null) => void
+  registerJointReader: (reader: JointReader | null) => void
   /** Records the current scene so the next discrete change can be undone. */
   pushUndo: () => void
   undo: () => void
@@ -55,9 +59,11 @@ export function sceneDocumentFromState(state: AppStore): SceneDocument {
 export const createAgentSlice: StateCreator<AppStore, [], [], AgentSlice> = (set, get) => ({
   agentStatus: 'disconnected',
   reviewRenderer: null,
+  jointReader: null,
   undoStack: [],
   setAgentStatus: (agentStatus) => set({ agentStatus }),
   registerReviewRenderer: (reviewRenderer) => set({ reviewRenderer }),
+  registerJointReader: (jointReader) => set({ jointReader }),
   pushUndo: () =>
     set((state) => {
       const snapshot = takeSnapshot(state)

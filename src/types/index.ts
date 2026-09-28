@@ -186,6 +186,22 @@ export interface SceneDocument {
   aspectRatio?: AspectRatioId
 }
 
+/** A named point on the mannequin, given in the local space of the bone it moves with. */
+export interface JointLandmark {
+  id: string
+  bone: BoneId
+  offset: Vec3
+}
+
+/** World positions (meters) of the joint landmarks, as reported to AI agents. */
+export interface JointReport {
+  joints: Record<string, Vec3>
+  /** Height of the lowest point of the body; 0 means it rests on the floor. */
+  lowestY: number
+}
+
+export type JointReader = () => JointReport
+
 /** Views the agent can ask for. All but 'current' are framed on the character and follow its yaw. */
 export type ReviewViewId = 'current' | 'front' | 'back' | 'left' | 'right' | 'top'
 

@@ -45,6 +45,11 @@ const handlers: Handlers = {
     const { width, height } = await pngSize(blob)
     return { pngBase64: await blobToBase64(blob), width, height }
   },
+  getJoints: async () => {
+    const reader = useAppStore.getState().jointReader
+    if (!reader) throw new Error('The 3D view is not ready yet.')
+    return reader()
+  },
 }
 
 function bridgeUrl(): string {

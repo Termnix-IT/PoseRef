@@ -5,7 +5,7 @@ import { createMcpHandler, McpServer, type CallToolResult } from '@modelcontextp
 import type { SceneDocument } from '../src/types/index.ts'
 import type { BrowserBridge } from './bridge.ts'
 import { buildPoseSpec } from './poseSpec.ts'
-import { renderViewsSchema, sceneSchema } from './sceneSchema.ts'
+import { JOINT_IDS, jointPositionsSchema, renderViewsSchema, sceneSchema } from './sceneSchema.ts'
 
 const RENDER_DIR = join(tmpdir(), 'poseref-renders')
 const RENDERS_KEPT = 20
@@ -14,7 +14,7 @@ const DEFAULT_VIEW_SIZE = 480
 
 const INSTRUCTIONS = `PoseRef controls a posable mannequin and camera in the user's browser to build pose and composition reference images.
 Call get_pose_spec once before your first set_scene: it explains the bone axes and sign conventions, which are easy to get wrong.
-Then loop: set_scene -> render_views -> compare with the request -> adjust. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
+Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on chin, elbow on knee) or resting on the floor, confirm it with get_joint_positions rather than the picture alone, and only report contact the numbers show. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
 
 function text(value: string): CallToolResult {
   return { content: [{ type: 'text', text: value }] }
@@ -114,6 +114,33 @@ function createServer(bridge: BrowserBridge): McpServer {
             { type: 'text', text: `Rendered ${result.width}x${result.height} px. Saved to ${path}` },
           ],
         }
+      } catch (error) {
+        return failure(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'get_joint_positions',
+    {
+      title: 'Get joint positions',
+      description:
+        `Returns world positions in meters of joint landmarks (${JOINT_IDS.join(', ')}), the height of the lowest body point (lowestY, 0 = on the floor), and distances for the requested pairs. ` +
+        'Use it to check contact instead of judging from the picture: joint landmarks sit inside the limbs, so two limbs touch when their distance is about the sum of the limb radii ' +
+        '(elbow resting on knee ~0.11 m); chin and nose are on the head surface, so a palm touches the chin at ~0.03-0.06 m.',
+      inputSchema: jointPositionsSchema,
+      annotations: { readOnlyHint: true },
+    },
+    async ({ pairs }) => {
+      try {
+        const report = await bridge.request('getJoints', {})
+        const distances = (pairs ?? []).map(([a, b]) => {
+          const p = report.joints[a]
+          const q = report.joints[b]
+          const d = p && q ? Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z) : NaN
+          return { from: a, to: b, distance: Math.round(d * 1000) / 1000 }
+        })
+        return text(JSON.stringify({ lowestY: report.lowestY, distances, joints: report.joints }))
       } catch (error) {
         return failure(error)
       }

@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { ASPECT_RATIOS } from '../src/constants/aspectRatios.ts'
-import { BONE_IDS } from '../src/constants/bones.ts'
+import { BONE_IDS, JOINT_LANDMARKS } from '../src/constants/bones.ts'
 import { CAMERA_POSITION_RANGE, CAMERA_TARGET_RANGE, FOV_RANGE } from '../src/constants/cameraPresets.ts'
 import type { AspectRatioId, BoneId, ReviewViewId, SceneDocument } from '../src/types/index.ts'
 import { normalizeDegrees } from '../src/utils/math.ts'
@@ -84,4 +84,14 @@ export const renderViewsSchema = z.strictObject({
       "Views to render side by side. 'current' is the user's camera and composition; the others are framed on the character and follow its yaw. Default: current, front, left.",
     ),
   size: z.number().int().min(256).max(768).optional().describe('Height of each view in pixels. Default 480.'),
+})
+
+export const JOINT_IDS = JOINT_LANDMARKS.map((landmark) => landmark.id) as [string, ...string[]]
+
+export const jointPositionsSchema = z.strictObject({
+  pairs: z
+    .array(z.tuple([z.enum(JOINT_IDS), z.enum(JOINT_IDS)]))
+    .max(20)
+    .optional()
+    .describe('Joint pairs to measure, e.g. [["rightElbow","rightKnee"],["rightPalm","chin"]]. Distances are returned in meters.'),
 })

@@ -1,4 +1,4 @@
-import type { BoneDef, BoneHandleDef, BoneId, BoneRotations, PartDef, Vec3 } from '../types/index.ts'
+import type { BoneDef, BoneHandleDef, BoneId, BoneRotations, JointLandmark, PartDef, Vec3 } from '../types/index.ts'
 
 /** Base height of the hips pivot above the floor (meters). */
 export const HIPS_BASE_Y = 0.94
@@ -115,6 +115,38 @@ export const MANNEQUIN_PARTS: PartDef[] = [
   // Feet (attached to the lower legs)
   { bone: 'leftLowerLeg', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.035, z: 0.12 } }, position: { x: 0, y: -0.445, z: 0.06 } },
   { bone: 'rightLowerLeg', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.035, z: 0.12 } }, position: { x: 0, y: -0.445, z: 0.06 } },
+]
+
+function sidedLandmarks(name: string, left: BoneId, right: BoneId, offset: Vec3): JointLandmark[] {
+  const title = name[0].toUpperCase() + name.slice(1)
+  return [
+    { id: `left${title}`, bone: left, offset },
+    { id: `right${title}`, bone: right, offset },
+  ]
+}
+
+/**
+ * Points an AI agent can measure to check contact and grounding. Offsets are in
+ * the bone's local space and follow the shapes in MANNEQUIN_PARTS (head
+ * ellipsoid, hand ellipsoid, foot on the lower leg), so update both together.
+ */
+export const JOINT_LANDMARKS: JointLandmark[] = [
+  { id: 'pelvis', bone: 'hips', offset: { x: 0, y: 0, z: 0 } },
+  { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 } },
+  { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 } },
+  { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 } },
+  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 } },
+  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.1, z: 0.13 } },
+  ...sidedLandmarks('shoulder', 'leftUpperArm', 'rightUpperArm', { x: 0, y: 0, z: 0 }),
+  ...sidedLandmarks('elbow', 'leftForearm', 'rightForearm', { x: 0, y: 0, z: 0 }),
+  ...sidedLandmarks('wrist', 'leftHand', 'rightHand', { x: 0, y: 0, z: 0 }),
+  ...sidedLandmarks('palm', 'leftHand', 'rightHand', { x: 0, y: -0.085, z: 0 }),
+  ...sidedLandmarks('fingertips', 'leftHand', 'rightHand', { x: 0, y: -0.18, z: 0 }),
+  ...sidedLandmarks('hip', 'leftThigh', 'rightThigh', { x: 0, y: 0, z: 0 }),
+  ...sidedLandmarks('knee', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: 0, z: 0 }),
+  ...sidedLandmarks('ankle', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.4, z: 0 }),
+  ...sidedLandmarks('sole', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.48, z: 0.06 }),
+  ...sidedLandmarks('toe', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.445, z: 0.18 }),
 ]
 
 export const MANNEQUIN_COLORS: Array<{ id: string; label: string; value: string }> = [
