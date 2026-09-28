@@ -117,37 +117,69 @@ export const MANNEQUIN_PARTS: PartDef[] = [
   { bone: 'rightLowerLeg', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.035, z: 0.12 } }, position: { x: 0, y: -0.445, z: 0.06 } },
 ]
 
-function sidedLandmarks(name: string, left: BoneId, right: BoneId, offset: Vec3): JointLandmark[] {
+type Side = 'left' | 'right'
+const sided = (side: Side, bone: string) => `${side}${bone}` as BoneId
+
+function sidedLandmarks(name: string, bone: string, offset: Vec3, chain: string[]): JointLandmark[] {
   const title = name[0].toUpperCase() + name.slice(1)
-  return [
-    { id: `left${title}`, bone: left, offset },
-    { id: `right${title}`, bone: right, offset },
-  ]
+  return (['left', 'right'] as const).map((side) => ({
+    id: `${side}${title}`,
+    bone: sided(side, bone),
+    offset,
+    ikChain: chain.map((name) => sided(side, name)),
+  }))
 }
 
 /**
- * Points an AI agent can measure to check contact and grounding. Offsets are in
- * the bone's local space and follow the shapes in MANNEQUIN_PARTS (head
- * ellipsoid, hand ellipsoid, foot on the lower leg), so update both together.
+ * Points an AI agent can measure to check contact and grounding, or move with
+ * the `reach` IK tool. Offsets are in the bone's local space and follow the
+ * shapes in MANNEQUIN_PARTS (head ellipsoid, hand ellipsoid, foot on the lower
+ * leg), so update both together. `ikChain` lists the bones IK rotates by
+ * default to move the point, root side first; the pelvis and hips have none
+ * because moving them means moving the whole body.
  */
 export const JOINT_LANDMARKS: JointLandmark[] = [
-  { id: 'pelvis', bone: 'hips', offset: { x: 0, y: 0, z: 0 } },
-  { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 } },
-  { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 } },
-  { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 } },
-  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 } },
-  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.1, z: 0.13 } },
-  ...sidedLandmarks('shoulder', 'leftUpperArm', 'rightUpperArm', { x: 0, y: 0, z: 0 }),
-  ...sidedLandmarks('elbow', 'leftForearm', 'rightForearm', { x: 0, y: 0, z: 0 }),
-  ...sidedLandmarks('wrist', 'leftHand', 'rightHand', { x: 0, y: 0, z: 0 }),
-  ...sidedLandmarks('palm', 'leftHand', 'rightHand', { x: 0, y: -0.085, z: 0 }),
-  ...sidedLandmarks('fingertips', 'leftHand', 'rightHand', { x: 0, y: -0.18, z: 0 }),
-  ...sidedLandmarks('hip', 'leftThigh', 'rightThigh', { x: 0, y: 0, z: 0 }),
-  ...sidedLandmarks('knee', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: 0, z: 0 }),
-  ...sidedLandmarks('ankle', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.4, z: 0 }),
-  ...sidedLandmarks('sole', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.48, z: 0.06 }),
-  ...sidedLandmarks('toe', 'leftLowerLeg', 'rightLowerLeg', { x: 0, y: -0.445, z: 0.18 }),
+  { id: 'pelvis', bone: 'hips', offset: { x: 0, y: 0, z: 0 }, ikChain: [] },
+  { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 }, ikChain: ['chest'] },
+  { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 }, ikChain: ['neck', 'head'] },
+  { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 }, ikChain: ['neck', 'head'] },
+  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 }, ikChain: ['neck', 'head'] },
+  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.1, z: 0.13 }, ikChain: ['neck', 'head'] },
+  ...sidedLandmarks('shoulder', 'UpperArm', { x: 0, y: 0, z: 0 }, ['Shoulder']),
+  ...sidedLandmarks('elbow', 'Forearm', { x: 0, y: 0, z: 0 }, ['UpperArm']),
+  ...sidedLandmarks('wrist', 'Hand', { x: 0, y: 0, z: 0 }, ['UpperArm', 'Forearm']),
+  ...sidedLandmarks('palm', 'Hand', { x: 0, y: -0.085, z: 0 }, ['UpperArm', 'Forearm']),
+  ...sidedLandmarks('fingertips', 'Hand', { x: 0, y: -0.18, z: 0 }, ['UpperArm', 'Forearm']),
+  ...sidedLandmarks('hip', 'Thigh', { x: 0, y: 0, z: 0 }, []),
+  ...sidedLandmarks('knee', 'LowerLeg', { x: 0, y: 0, z: 0 }, ['Thigh']),
+  ...sidedLandmarks('ankle', 'LowerLeg', { x: 0, y: -0.4, z: 0 }, ['Thigh', 'LowerLeg']),
+  ...sidedLandmarks('sole', 'LowerLeg', { x: 0, y: -0.48, z: 0.06 }, ['Thigh', 'LowerLeg']),
+  ...sidedLandmarks('toe', 'LowerLeg', { x: 0, y: -0.445, z: 0.18 }, ['Thigh', 'LowerLeg']),
 ]
+
+export const JOINT_LANDMARK_MAP: Record<string, JointLandmark> = Object.fromEntries(
+  JOINT_LANDMARKS.map((landmark) => [landmark.id, landmark]),
+)
+
+/**
+ * Elbows and knees bend on one axis only. IK changes just their local X angle,
+ * within this range, so they never bend backwards or twist.
+ */
+export const HINGE_LIMITS: Partial<Record<BoneId, { min: number; max: number }>> = {
+  leftForearm: { min: -160, max: 0 },
+  rightForearm: { min: -160, max: 0 },
+  leftLowerLeg: { min: 0, max: 160 },
+  rightLowerLeg: { min: 0, max: 160 },
+}
+
+type AxisRange = { min: number; max: number }
+
+/** Per-axis limits (Euler degrees) IK applies to the torso and head so it cannot fold them unnaturally. */
+export const BALL_LIMITS: Partial<Record<BoneId, { x: AxisRange; y: AxisRange; z: AxisRange }>> = {
+  chest: { x: { min: -40, max: 90 }, y: { min: -60, max: 60 }, z: { min: -45, max: 45 } },
+  neck: { x: { min: -50, max: 60 }, y: { min: -70, max: 70 }, z: { min: -40, max: 40 } },
+  head: { x: { min: -40, max: 40 }, y: { min: -50, max: 50 }, z: { min: -30, max: 30 } },
+}
 
 export const MANNEQUIN_COLORS: Array<{ id: string; label: string; value: string }> = [
   { id: 'light', label: '明るいグレー', value: '#c9c9c9' },

@@ -2,19 +2,22 @@ import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createMcpHandler, McpServer, type CallToolResult } from '@modelcontextprotocol/server'
-import type { SceneDocument } from '../src/types/index.ts'
+import type { BoneRotations, SceneDocument } from '../src/types/index.ts'
+import { checkGoal, resolveChains, solveIk, type PoseFrame } from '../src/utils/ik.ts'
 import type { BrowserBridge } from './bridge.ts'
 import { buildPoseSpec } from './poseSpec.ts'
-import { JOINT_IDS, jointPositionsSchema, renderViewsSchema, sceneSchema } from './sceneSchema.ts'
+import { JOINT_IDS, jointPositionsSchema, reachSchema, renderViewsSchema, sceneSchema } from './sceneSchema.ts'
 
 const RENDER_DIR = join(tmpdir(), 'poseref-renders')
 const RENDERS_KEPT = 20
 const DEFAULT_VIEWS = ['current', 'front', 'left'] as const
 const DEFAULT_VIEW_SIZE = 480
+/** A contact within 2 cm reads as touching in the render. */
+const REACHED_WITHIN = 0.02
 
 const INSTRUCTIONS = `PoseRef controls a posable mannequin and camera in the user's browser to build pose and composition reference images.
 Call get_pose_spec once before your first set_scene: it explains the bone axes and sign conventions, which are easy to get wrong.
-Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on chin, elbow on knee), confirm it with get_joint_positions rather than the picture alone, and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
+Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on hip, elbow on knee, hands together), set the rough pose first and then place the contacts with reach (inverse kinematics) instead of guessing angles; confirm with get_joint_positions and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
 
 function text(value: string): CallToolResult {
   return { content: [{ type: 'text', text: value }] }
@@ -148,6 +151,51 @@ function createServer(bridge: BrowserBridge): McpServer {
           return { from: a, to: b, distance: Math.round(d * 1000) / 1000 }
         })
         return text(JSON.stringify({ lowestY: report.lowestY, distances, joints: report.joints }))
+      } catch (error) {
+        return failure(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'reach',
+    {
+      title: 'Move joints to targets (IK)',
+      description:
+        'Inverse kinematics: rotates bones so a landmark (effector) moves onto another landmark or a world point, e.g. an elbow onto a knee or a palm under the chin. ' +
+        'Elbows and knees only bend the natural way and the torso and head stay within natural limits. Only the listed chain bones change; the result is one undoable step. ' +
+        'Set the rough pose with set_scene first, then use reach for contacts, then render_views to check.',
+      inputSchema: reachSchema,
+    },
+    async ({ goals, ground }) => {
+      try {
+        const scene = await bridge.request('getScene', {})
+        const frame: PoseFrame = {
+          bones: scene.pose!.bones as BoneRotations,
+          rootOffset: scene.pose!.rootOffset!,
+          characterPosition: scene.character!.position!,
+          characterYaw: scene.character!.yaw!,
+        }
+        const chains = resolveChains(goals)
+        for (const [index, goal] of goals.entries()) {
+          const problem = checkGoal(goal, chains[index])
+          if (problem) return failure(new Error(problem))
+        }
+        const result = solveIk(frame, goals, chains)
+        const bones = Object.fromEntries(result.changed.map((bone) => [bone, result.bones[bone]]))
+        const { groundShift } = await bridge.request('setScene', { version: 1, pose: { mode: 'merge', bones, ground } })
+
+        const lines = result.goals.map(
+          (goal) =>
+            `- ${goal.effector}: ${goal.error <= REACHED_WITHIN ? 'reached' : 'NOT reached'}, ${goal.error} m from the target (rotated ${goal.chain.join(', ')})`,
+        )
+        const missed = result.goals.some((goal) => goal.error > REACHED_WITHIN)
+        const advice = missed
+          ? '\nA target out of reach leaves the limb pointing at it but short. Move the body closer first (lean the chest, bend the legs), ' +
+            "add a parent bone such as chest to that goal's chain, or add a goal that moves the other body part toward this one."
+          : ''
+        const grounding = groundShift ? `\nGrounded: hips moved ${groundShift > 0 ? 'up' : 'down'} by ${Math.abs(groundShift)} m.` : ''
+        return text(`${lines.join('\n')}${advice}${grounding}\nNew rotations: ${JSON.stringify(bones)}`)
       } catch (error) {
         return failure(error)
       }

@@ -196,6 +196,8 @@ export interface JointLandmark {
   id: string
   bone: BoneId
   offset: Vec3
+  /** Bones the IK tool rotates by default to move this point, root side first. */
+  ikChain: BoneId[]
 }
 
 /** World positions (meters) of the joint landmarks, as reported to AI agents. */

@@ -47,9 +47,9 @@ You edit the scene with \`set_scene\` and check the result with \`render_views\`
 1. \`get_scene\` if you need the current state (for small edits use pose.mode "merge").
 2. \`set_scene\` with pose, and camera if the request mentions an angle or composition.
 3. \`render_views\` (current + front + left by default) and compare the picture with the request.
-4. For contact (hand on chin, elbow on knee, hands on the floor), call \`get_joint_positions\` with the relevant
-   pairs and adjust until the distances say it is right; pictures are easy to misjudge. Feet-on-floor is handled
-   by set_scene's automatic grounding.
+4. For contact (hand on hip, elbow on knee, hands on the floor), place it with \`reach\` (see "Contact with reach")
+   and confirm with \`get_joint_positions\`; pictures are easy to misjudge. Feet-on-floor is handled by
+   set_scene's automatic grounding.
 5. Fix what is wrong and render again. Two or three rounds are usually enough: the user fine-tunes by hand afterwards.
 If a combined pose + camera change keeps failing, settle the pose first, then the camera.
 
@@ -93,6 +93,27 @@ At rest these point down (-Y). With rotation (x, y = 0, z) a limb points at
 - Poses where body parts touch (hand on chin, elbow on knee) rarely land on the first try. Measure with
   \`get_joint_positions\`: limb radii are about upper arm 0.05, forearm 0.043, thigh 0.068, shin 0.052 m and the
   hand is 0.02-0.04 m thick, so an elbow resting on a knee is ~0.11 m from it and a palm on the chin is ~0.03-0.06 m.
+
+## Contact with reach (inverse kinematics)
+\`reach\` moves a landmark (effector) onto another landmark or a world point by rotating a chain of bones, so you
+do not have to work out the angles. Elbows and knees only bend the natural way; chest, neck and head stay within
+natural limits.
+- Default chains: elbow -> upper arm; wrist, palm, fingertips -> upper arm + forearm; knee -> thigh;
+  ankle, sole, toe -> thigh + lower leg; chin, nose, head -> neck + head; neckBase -> chest.
+- Goals are solved in order and re-checked on every pass. Bones used by an earlier goal are left out of later
+  goals' default chains, so list the contact that must hold most firmly first.
+- \`offset\` is added to the target in world space. Joint landmarks sit inside the limbs, so leave the limb radii
+  between them: an elbow resting on top of a knee is
+  \`{"effector":"rightElbow","target":"rightKnee","offset":{"x":0,"y":0.11,"z":0}}\`.
+- If a goal is reported NOT reached, the body is too far away for that chain. Change the rough pose, add a parent
+  bone to its chain (e.g. \`["chest","rightUpperArm"]\`), or add a second goal that moves the other body part
+  toward the first.
+- Two goals that only point at each other can meet anywhere. Anchor one to a place: hands together in front of the
+  chest is rightPalm -> a world point such as \`{"x":0,"y":1.25,"z":0.3}\`, then leftPalm -> rightPalm.
+- Straight limbs bend with the elbow down and slightly out and back, and the knee forward; an already bent limb
+  keeps its bend direction, so pre-bend it in the rough pose if you want another direction.
+- Hand on hip: \`{"goals":[{"effector":"leftPalm","target":"pelvis","offset":{"x":0.17,"y":0.02,"z":0}}]}\`
+  (offsets are in world space; rotate them when the character is turned).
 
 ## Grounding (pose.rootOffset)
 \`set_scene\` grounds the body for you: after applying a pose it raises or lowers the hips so the lowest body

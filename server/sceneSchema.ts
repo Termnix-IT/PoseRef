@@ -101,3 +101,31 @@ export const jointPositionsSchema = z.strictObject({
     .optional()
     .describe('Joint pairs to measure, e.g. [["rightElbow","rightKnee"],["rightPalm","chin"]]. Distances are returned in meters.'),
 })
+
+const worldPoint = z.strictObject({ x: between({ min: -5, max: 5 }), y: between({ min: -5, max: 5 }), z: between({ min: -5, max: 5 }) })
+
+export const reachSchema = z.strictObject({
+  goals: z
+    .array(
+      z.strictObject({
+        effector: z.enum(JOINT_IDS).describe('Landmark to move, e.g. "rightElbow" or "rightPalm".'),
+        target: z
+          .union([z.enum(JOINT_IDS), worldPoint])
+          .describe('Landmark name, or a world point in meters, to move the effector to.'),
+        offset: z
+          .strictObject({ x: between({ min: -1, max: 1 }), y: between({ min: -1, max: 1 }), z: between({ min: -1, max: 1 }) })
+          .optional()
+          .describe('World-space offset added to the target, e.g. {"x":0,"y":0.11,"z":0} to rest an elbow on top of a knee.'),
+        chain: z
+          .array(z.enum(boneIds))
+          .min(1)
+          .max(6)
+          .optional()
+          .describe("Bones allowed to rotate, root side first. Default: the effector's usual chain, minus bones used by earlier goals."),
+      }),
+    )
+    .min(1)
+    .max(4)
+    .describe('Solved in order and re-checked on every pass, so list the goal that must hold most firmly first.'),
+  ground: z.boolean().optional().describe('Default true: keep the body resting on the floor afterwards.'),
+})

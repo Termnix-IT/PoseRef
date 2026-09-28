@@ -1,6 +1,6 @@
 import { Euler, Quaternion } from 'three'
-import type { Vec3 } from '../types'
-import { DEG2RAD, RAD2DEG, normalizeDegrees } from './math'
+import type { Vec3 } from '../types/index.ts'
+import { DEG2RAD, RAD2DEG, normalizeDegrees } from './math.ts'
 
 const scratchEuler = new Euler(0, 0, 0, 'XYZ')
 const scratchQuaternion = new Quaternion()
