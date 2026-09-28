@@ -31,7 +31,7 @@ export function createPoseFromPreset(id: PosePresetId): PoseState {
   }
 }
 
-export const createPoseSlice: StateCreator<AppStore, [], [], PoseSlice> = (set) => ({
+export const createPoseSlice: StateCreator<AppStore, [], [], PoseSlice> = (set, get) => ({
   pose: createPoseFromPreset(DEFAULT_POSE_PRESET),
   selectedBone: null,
   selectBone: (bone) => set({ selectedBone: bone }),
@@ -59,6 +59,12 @@ export const createPoseSlice: StateCreator<AppStore, [], [], PoseSlice> = (set) 
         bones: { ...state.pose.bones, [bone]: { x: 0, y: 0, z: 0 } },
       },
     })),
-  applyPosePreset: (id) => set({ pose: createPoseFromPreset(id) }),
-  resetPose: () => set({ pose: createPoseFromPreset(DEFAULT_POSE_PRESET), selectedBone: null }),
+  applyPosePreset: (id) => {
+    get().pushUndo()
+    set({ pose: createPoseFromPreset(id) })
+  },
+  resetPose: () => {
+    get().pushUndo()
+    set({ pose: createPoseFromPreset(DEFAULT_POSE_PRESET), selectedBone: null })
+  },
 })

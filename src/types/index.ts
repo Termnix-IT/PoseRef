@@ -168,6 +168,40 @@ export type PromptLanguage = 'ja' | 'en'
  */
 export type InteractionMode = 'camera' | 'pose'
 
+/**
+ * Scene description exchanged with AI agents through the MCP bridge. Every
+ * section is optional; omitted sections leave the current state untouched.
+ * The server validates and normalizes it before it reaches the browser.
+ */
+export interface SceneDocument {
+  version?: 1
+  pose?: {
+    /** 'replace' (default) zeroes every bone not listed; 'merge' keeps them. */
+    mode?: 'replace' | 'merge'
+    bones?: Partial<BoneRotations>
+    rootOffset?: Vec3
+  }
+  character?: { yaw?: number; position?: Vec3 }
+  camera?: { position?: Vec3; target?: Vec3; fov?: number }
+  aspectRatio?: AspectRatioId
+}
+
+/** Views the agent can ask for. All but 'current' are framed on the character and follow its yaw. */
+export type ReviewViewId = 'current' | 'front' | 'back' | 'left' | 'right' | 'top'
+
+/** Renders the requested views side by side into one labeled PNG. */
+export type ReviewRenderer = (views: ReviewViewId[], size: number) => Promise<Blob>
+
+export type AgentBridgeStatus = 'connecting' | 'connected' | 'disconnected'
+
+/** State that the undo history restores. */
+export interface SceneSnapshot {
+  pose: PoseState
+  character: CharacterState
+  camera: CameraState
+  aspectRatio: AspectRatioId
+}
+
 export interface BoneHandleDef {
   /** Position of the handle in the bone's local space. */
   offset: Vec3

@@ -1,15 +1,20 @@
-import { useThree } from '@react-three/fiber'
+import { flushSync, useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import type { PerspectiveCamera } from 'three'
 import { useAppStore } from '../../store'
 import { renderScenePng } from '../../utils/exportPng'
+import { renderReviewSheet } from '../../utils/reviewRender'
 
-/** Exposes a renderer-bound export function to the rest of the app through the store. */
+/**
+ * Exposes renderer-bound functions to the rest of the app through the store:
+ * the PNG export and the multi-view review sheet used by AI agents.
+ */
 export function ExportBridge() {
   const gl = useThree((state) => state.gl)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
   const register = useAppStore((state) => state.registerExportRenderer)
+  const registerReview = useAppStore((state) => state.registerReviewRenderer)
 
   useEffect(() => {
     register(({ width, height }) =>
@@ -17,6 +22,25 @@ export function ExportBridge() {
     )
     return () => register(null)
   }, [gl, scene, camera, register])
+
+  useEffect(() => {
+    registerReview((views, size) => {
+      // An agent usually renders right after changing the scene, often while this tab is in
+      // the background; commit any pending scene updates before drawing.
+      flushSync(() => {})
+      const state = useAppStore.getState()
+      return renderReviewSheet({
+        gl,
+        scene,
+        views,
+        size,
+        camera: state.camera,
+        aspectRatio: state.aspectRatio,
+        characterYaw: state.character.yaw,
+      })
+    })
+    return () => registerReview(null)
+  }, [gl, scene, registerReview])
 
   return null
 }

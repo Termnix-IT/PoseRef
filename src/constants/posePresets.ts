@@ -1,4 +1,4 @@
-import type { PoseGroupId, PosePreset, PosePresetId, Vec3 } from '../types'
+import type { PoseGroupId, PosePreset, PosePresetId, Vec3 } from '../types/index.ts'
 
 const r = (x: number, y: number, z: number): Vec3 => ({ x, y, z })
 

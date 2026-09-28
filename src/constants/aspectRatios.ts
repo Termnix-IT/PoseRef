@@ -1,4 +1,4 @@
-import type { AspectRatioId, AspectRatioOption, ExportScale } from '../types'
+import type { AspectRatioId, AspectRatioOption, ExportScale } from '../types/index.ts'
 
 /** Supported aspect ratios with their 1024px-basis export sizes. */
 export const ASPECT_RATIOS: AspectRatioOption[] = [

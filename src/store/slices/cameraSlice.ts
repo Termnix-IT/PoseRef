@@ -66,7 +66,8 @@ export const createCameraSlice: StateCreator<AppStore, [], [], CameraSlice> = (s
         activeCameraPreset: 'custom',
       }
     }),
-  applyCameraPreset: (id) =>
+  applyCameraPreset: (id) => {
+    get().pushUndo()
     set((state) => {
       const preset = CAMERA_PRESET_MAP[id]
       return {
@@ -74,7 +75,8 @@ export const createCameraSlice: StateCreator<AppStore, [], [], CameraSlice> = (s
         cameraSyncId: state.cameraSyncId + 1,
         activeCameraPreset: id,
       }
-    }),
+    })
+  },
   syncCameraFromControls: (position, target) => {
     const { camera } = get()
     const nextPosition = roundVec3(position, 4)

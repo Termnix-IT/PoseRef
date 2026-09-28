@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createAgentSlice, type AgentSlice } from './slices/agentSlice'
 import { createCameraSlice, type CameraSlice } from './slices/cameraSlice'
 import { createCharacterSlice, type CharacterSlice } from './slices/characterSlice'
 import { createExportSlice, type ExportSlice } from './slices/exportSlice'
@@ -10,7 +11,13 @@ export interface ResetSlice {
   resetAll: () => void
 }
 
-export type AppStore = CharacterSlice & PoseSlice & CameraSlice & ViewSlice & ExportSlice & ResetSlice
+export type AppStore = CharacterSlice &
+  PoseSlice &
+  CameraSlice &
+  ViewSlice &
+  ExportSlice &
+  AgentSlice &
+  ResetSlice
 
 export const useAppStore = create<AppStore>()((set, get, api) => ({
   ...createCharacterSlice(set, get, api),
@@ -18,8 +25,10 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   ...createCameraSlice(set, get, api),
   ...createViewSlice(set, get, api),
   ...createExportSlice(set, get, api),
+  ...createAgentSlice(set, get, api),
   resetAll: () => {
     const state = get()
+    state.pushUndo()
     state.resetCharacter()
     state.resetPose()
     state.resetCamera()

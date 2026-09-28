@@ -8,6 +8,14 @@ export const UI = {
     resetAll: 'すべてリセット',
     resetAllTitle: 'ポーズ・キャラクター・カメラ・画角・アスペクト比を初期状態に戻します',
     rendering: 'レンダリング中...',
+    undo: '元に戻す',
+    undoTitle: 'AIによる変更・プリセット・リセットを1つ取り消します (Ctrl+Z)。スライダーやドラッグの調整は対象外です',
+  },
+  agent: {
+    connected: 'AI連携: 接続中',
+    disconnected: 'AI連携: 未接続',
+    connectedTitle: 'PoseRefサーバーに接続しています。MCPを登録したClaude Code / Codexからポーズとカメラを操作できます',
+    disconnectedTitle: 'PoseRefサーバーに接続していません。npm start（開発中は npm run dev）で起動したサーバーから開くと、AIエージェントと連携できます',
   },
   common: {
     reset: 'リセット',

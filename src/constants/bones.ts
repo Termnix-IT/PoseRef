@@ -1,4 +1,4 @@
-import type { BoneDef, BoneHandleDef, BoneId, BoneRotations, PartDef, Vec3 } from '../types'
+import type { BoneDef, BoneHandleDef, BoneId, BoneRotations, PartDef, Vec3 } from '../types/index.ts'
 
 /** Base height of the hips pivot above the floor (meters). */
 export const HIPS_BASE_Y = 0.94

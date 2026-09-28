@@ -49,7 +49,7 @@ function suppressEditingVisuals(scene: Scene): () => void {
   }
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob)
@@ -60,10 +60,10 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 
 /**
  * Renders the scene at an explicit pixel size (independent from the on-screen
- * canvas size) and returns the result as a PNG blob. The renderer state is
- * restored synchronously so the interactive view is not affected.
+ * canvas size) into a new 2D canvas. The renderer state is restored
+ * synchronously so the interactive view is not affected.
  */
-export function renderScenePng({ gl, scene, camera, width, height }: RenderPngParams): Promise<Blob> {
+export function renderSceneCanvas({ gl, scene, camera, width, height }: RenderPngParams): HTMLCanvasElement {
   const prevSize = gl.getSize(new Vector2())
   const prevPixelRatio = gl.getPixelRatio()
   const prevAspect = camera.aspect
@@ -73,7 +73,7 @@ export function renderScenePng({ gl, scene, camera, width, height }: RenderPngPa
   output.width = width
   output.height = height
   const context = output.getContext('2d')
-  if (!context) return Promise.reject(new Error(UI.export.canvasUnavailable))
+  if (!context) throw new Error(UI.export.canvasUnavailable)
 
   try {
     gl.setPixelRatio(1)
@@ -91,5 +91,14 @@ export function renderScenePng({ gl, scene, camera, width, height }: RenderPngPa
     camera.updateProjectionMatrix()
   }
 
-  return canvasToBlob(output)
+  return output
+}
+
+/** Same as {@link renderSceneCanvas}, encoded as a PNG blob. */
+export function renderScenePng(params: RenderPngParams): Promise<Blob> {
+  try {
+    return canvasToBlob(renderSceneCanvas(params))
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { startAgentBridge } from './agent/bridgeClient'
 import { useAppStore } from './store'
 import './styles/global.css'
 import './styles/layout.css'
@@ -13,6 +14,8 @@ if (import.meta.env.DEV) {
   // Handy for debugging from the browser console during development only.
   ;(window as unknown as { __poseref: typeof useAppStore }).__poseref = useAppStore
 }
+
+startAgentBridge()
 
 createRoot(container).render(
   <StrictMode>

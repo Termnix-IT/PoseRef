@@ -14,6 +14,9 @@ export function Header() {
   const isExporting = useAppStore((state) => state.isExporting)
   const interactionMode = useAppStore((state) => state.interactionMode)
   const setInteractionMode = useAppStore((state) => state.setInteractionMode)
+  const agentConnected = useAppStore((state) => state.agentStatus === 'connected')
+  const canUndo = useAppStore((state) => state.undoStack.length > 0)
+  const undo = useAppStore((state) => state.undo)
 
   return (
     <header className="header">
@@ -35,6 +38,13 @@ export function Header() {
       <span className="header__status" aria-live="polite">
         {isExporting ? UI.app.rendering : null}
       </span>
+      <span
+        className={`header__agent${agentConnected ? ' is-connected' : ''}`}
+        title={agentConnected ? UI.agent.connectedTitle : UI.agent.disconnectedTitle}
+      >
+        <span className="header__agent-dot" aria-hidden />
+        {agentConnected ? UI.agent.connected : UI.agent.disconnected}
+      </span>
       <SegmentedControl
         compact
         options={MODE_OPTIONS}
@@ -42,6 +52,9 @@ export function Header() {
         onChange={setInteractionMode}
         ariaLabel={UI.mode.label}
       />
+      <Button size="sm" onClick={undo} disabled={!canUndo} title={UI.app.undoTitle}>
+        {UI.app.undo}
+      </Button>
       <Button size="sm" onClick={resetAll} title={UI.app.resetAllTitle}>
         {UI.app.resetAll}
       </Button>

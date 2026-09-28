@@ -1,4 +1,4 @@
-import type { Axis, Vec3 } from '../types'
+import type { Axis, Vec3 } from '../types/index.ts'
 
 export const DEG2RAD = Math.PI / 180
 export const RAD2DEG = 180 / Math.PI
