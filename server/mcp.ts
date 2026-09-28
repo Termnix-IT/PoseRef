@@ -17,7 +17,8 @@ const REACHED_WITHIN = 0.02
 
 const INSTRUCTIONS = `PoseRef controls a posable mannequin and camera in the user's browser to build pose and composition reference images.
 Call get_pose_spec once before your first set_scene: it explains the bone axes and sign conventions, which are easy to get wrong.
-Then loop: set_scene -> render_views -> compare with the request -> adjust. When the request has body parts touching (hand on hip, elbow on knee, hands together), set the rough pose first and then place the contacts with reach (inverse kinematics) instead of guessing angles; confirm with get_joint_positions and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
+Before posing, decide which way the character acts (a target, a direction) and keep that direction across the picture so the action reads in silhouette; aiming, throwing and swinging are done side-on (see the spec's "Composition and readability").
+Then loop: set_scene -> render_views -> compare with the request and check the silhouette from the 'current' view -> adjust. When the request has body parts touching (hand on hip, elbow on knee, hands together), set the rough pose first and then place the contacts with reach (inverse kinematics) instead of guessing angles; confirm with get_joint_positions and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
 
 function text(value: string): CallToolResult {
   return { content: [{ type: 'text', text: value }] }

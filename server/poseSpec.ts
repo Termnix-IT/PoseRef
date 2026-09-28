@@ -94,6 +94,18 @@ At rest these point down (-Y). With rotation (x, y = 0, z) a limb points at
   \`get_joint_positions\`: limb radii are about upper arm 0.05, forearm 0.043, thigh 0.068, shin 0.052 m and the
   hand is 0.02-0.04 m thick, so an elbow resting on a knee is ~0.11 m from it and a palm on the chin is ~0.03-0.06 m.
 
+## Composition and readability
+The picture is a reference for an image AI, so the pose must read from its silhouette in the 'current' view.
+- Decide first where the character acts toward (a target, a direction of travel, something it looks at), then
+  place that direction across the picture rather than straight at or away from the camera, so the key limbs are
+  seen from the side instead of foreshortened.
+- Actions aimed at a target are done side-on: drawing a bow, aiming a rifle, throwing, swinging a bat, club or
+  racket. The lead side (for a right-handed person the left arm and left shoulder) faces the target, the chest
+  faces 90 degrees away from it, and the head turns toward the target. Turn the character with \`character.yaw\`
+  and keep the target direction across the frame.
+- In render_views, check that the arms and legs that carry the action do not overlap the torso or each other and
+  do not point at the camera. If they do, turn the character or move the camera before fine-tuning angles.
+
 ## Contact with reach (inverse kinematics)
 \`reach\` moves a landmark (effector) onto another landmark or a world point by rotating a chain of bones, so you
 do not have to work out the angles. Elbows and knees only bend the natural way; chest, neck and head stay within
