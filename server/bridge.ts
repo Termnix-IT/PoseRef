@@ -15,6 +15,15 @@ interface Pending {
   timer: NodeJS.Timeout
 }
 
+/**
+ * What the MCP tools need from the browser: send a request to the open PoseRef
+ * tab and get its answer. Implemented in-process by BrowserBridge and, for
+ * stdio MCP processes, by RemoteBridge over the server's internal endpoint.
+ */
+export interface BridgeClient {
+  request<M extends BridgeMethod>(method: M, params: BridgeMethods[M]['params']): Promise<BridgeMethods[M]['result']>
+}
+
 /** Thrown when no browser tab is connected; the message is meant for the agent to relay. */
 export class NoBrowserError extends Error {}
 
@@ -23,7 +32,7 @@ export class NoBrowserError extends Error {}
  * requests to one of them. The tab that most recently gained focus wins, so
  * with several tabs open the agent edits the one the user is looking at.
  */
-export class BrowserBridge {
+export class BrowserBridge implements BridgeClient {
   private readonly tabs: WebSocket[] = []
   private readonly pending = new Map<number, Pending>()
   private nextId = 1
@@ -50,8 +59,8 @@ export class BrowserBridge {
     if (!socket) {
       return Promise.reject(
         new NoBrowserError(
-          `No PoseRef browser tab is connected. Ask the user to open ${this.appUrl} in a browser ` +
-            '(the PoseRef server must be running: `npm start` in the PoseRef folder), then retry.',
+          `No PoseRef browser tab is connected. Ask the user to open ${this.appUrl} in a browser, then retry. ` +
+            'If that page does not load, PoseRef is not running: the user can start it with `npx poseref`.',
         ),
       )
     }

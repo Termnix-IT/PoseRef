@@ -1,14 +1,14 @@
-import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createMcpHandler, McpServer, type CallToolResult } from '@modelcontextprotocol/server'
 import type { BoneRotations, SceneDocument } from '../src/types/index.ts'
 import { checkGoal, resolveChains, solveIk, type PoseFrame } from '../src/utils/ik.ts'
-import type { BrowserBridge } from './bridge.ts'
+import type { BridgeClient } from './bridge.ts'
+import { rendersDir } from './home.ts'
 import { buildPoseSpec } from './poseSpec.ts'
 import { JOINT_IDS, jointPositionsSchema, reachSchema, renderViewsSchema, sceneSchema } from './sceneSchema.ts'
+import { POSEREF_VERSION } from './version.ts'
 
-const RENDER_DIR = join(tmpdir(), 'poseref-renders')
 const RENDERS_KEPT = 20
 const DEFAULT_VIEWS = ['current', 'front', 'left'] as const
 const DEFAULT_VIEW_SIZE = 480
@@ -37,20 +37,21 @@ function failure(error: unknown): CallToolResult {
 }
 
 /**
- * Saves the review image to a temp file as well. Clients that cannot show MCP
- * image content to the model (some Codex versions) can open the file instead.
+ * Saves the review image to a file as well. Clients that cannot show MCP image
+ * content to the model (some Codex versions) can open the file instead.
  */
 async function saveRender(pngBase64: string): Promise<string> {
-  await mkdir(RENDER_DIR, { recursive: true })
-  const path = join(RENDER_DIR, `review-${new Date().toISOString().replace(/[:.]/g, '-')}.png`)
+  const dir = rendersDir()
+  const path = join(dir, `review-${new Date().toISOString().replace(/[:.]/g, '-')}.png`)
   await writeFile(path, Buffer.from(pngBase64, 'base64'))
-  const files = (await readdir(RENDER_DIR)).filter((name) => name.endsWith('.png')).sort()
-  await Promise.all(files.slice(0, -RENDERS_KEPT).map((name) => rm(join(RENDER_DIR, name), { force: true })))
+  const files = (await readdir(dir)).filter((name) => name.endsWith('.png')).sort()
+  await Promise.all(files.slice(0, -RENDERS_KEPT).map((name) => rm(join(dir, name), { force: true })))
   return path
 }
 
-function createServer(bridge: BrowserBridge): McpServer {
-  const server = new McpServer({ name: 'poseref', version: '0.1.0' }, { instructions: INSTRUCTIONS })
+/** The PoseRef tools, working through any bridge: in-process for HTTP, remote for stdio. */
+export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
+  const server = new McpServer({ name: 'poseref', version: POSEREF_VERSION }, { instructions: INSTRUCTIONS })
 
   server.registerTool(
     'get_pose_spec',
@@ -207,6 +208,6 @@ function createServer(bridge: BrowserBridge): McpServer {
 }
 
 /** Stateless Streamable HTTP handler: every request gets a fresh McpServer bound to the shared bridge. */
-export function createPoseRefMcpHandler(bridge: BrowserBridge) {
-  return createMcpHandler(() => createServer(bridge))
+export function createPoseRefMcpHandler(bridge: BridgeClient) {
+  return createMcpHandler(() => createPoseRefMcpServer(bridge))
 }
