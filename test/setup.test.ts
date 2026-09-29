@@ -54,3 +54,16 @@ describe('registration environment', () => {
     assert.deepEqual(registrationEnv(48000), ['--env', 'POSEREF_PORT=48000'])
   })
 })
+
+describe('shell command line (Windows)', () => {
+  test('joins safe pieces and refuses anything a shell could interpret', async () => {
+    const { shellCommandLine } = await import('../server/setup.ts')
+    assert.equal(
+      shellCommandLine('claude', ['mcp', 'add', '--scope', 'user', 'poseref', '--env', 'POSEREF_PORT=48000', '--', 'cmd', '/c', 'npx', '-y', 'poseref@0.1.1', 'mcp']),
+      'claude mcp add --scope user poseref --env POSEREF_PORT=48000 -- cmd /c npx -y poseref@0.1.1 mcp',
+    )
+    for (const bad of ['a b', 'a&calc', 'a|b', 'a>b', '"x"', '%PATH%', 'a^b', '$(x)', '']) {
+      assert.throws(() => shellCommandLine('codex', ['mcp', bad]), /unexpected argument/, bad)
+    }
+  })
+})

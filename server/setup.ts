@@ -54,17 +54,26 @@ interface CommandResult {
 /** Every argument PoseRef passes to another CLI is a fixed word or a version, never user text. */
 const SAFE_ARG = /^[\w@.:/=-]+$/
 
-function run(command: string, args: string[]): CommandResult {
+/**
+ * Joins a command for the Windows shell. claude and codex are .cmd shims there,
+ * which Node can only start through a shell; building the line ourselves (rather
+ * than passing an args array with `shell: true`, which Node deprecates because it
+ * concatenates without escaping) keeps the check on every piece explicit. Pieces
+ * are limited to SAFE_ARG, which has no spaces or shell metacharacters, so they
+ * need no quoting.
+ */
+export function shellCommandLine(command: string, args: string[]): string {
   for (const arg of [command, ...args]) {
     if (!SAFE_ARG.test(arg)) throw new Error(`Refusing to run a command with an unexpected argument: ${arg}`)
   }
-  // claude and codex are .cmd shims on Windows, which Node can only start through a shell.
-  const result = spawnSync(command, args, {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-    windowsHide: true,
-    timeout: 60_000,
-  })
+  return [command, ...args].join(' ')
+}
+
+function run(command: string, args: string[]): CommandResult {
+  const line = shellCommandLine(command, args)
+  const options = { encoding: 'utf8', windowsHide: true, timeout: 60_000 } as const
+  const result =
+    process.platform === 'win32' ? spawnSync(line, { ...options, shell: true }) : spawnSync(command, args, options)
   return { ok: result.status === 0, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.trim() }
 }
 
