@@ -164,7 +164,7 @@ function createServer(bridge: BrowserBridge): McpServer {
       title: 'Move joints to targets (IK)',
       description:
         'Inverse kinematics: rotates bones so a landmark (effector) moves onto another landmark or a world point, e.g. an elbow onto a knee or a palm under the chin. ' +
-        'Elbows and knees only bend the natural way and the torso and head stay within natural limits. Only the listed chain bones change; the result is one undoable step. ' +
+        'Elbows and knees only bend the natural way and the torso and head stay within natural limits. Only the chain bones change, except that the upper arm or thigh above a chained elbow or knee may twist about its own length, which keeps that joint in place; the result is one undoable step. ' +
         'Set the rough pose with set_scene first, then use reach for contacts, then render_views to check.',
       inputSchema: reachSchema,
     },

@@ -13,6 +13,7 @@
     "start": "npm run build && node server/index.ts",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
+    "test": "node --test \"test/**/*.test.ts\"",
     "preview": "vite preview"
   },
   "dependencies": {

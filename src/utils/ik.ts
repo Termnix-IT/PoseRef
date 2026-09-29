@@ -228,6 +228,38 @@ function stepTwoBone(frame: PoseFrame, upper: BoneId, hinge: BoneId, goal: IkGoa
   rotateInWorld(frame, upper, new Quaternion().setFromAxisAngle(toTarget, swivel))
 }
 
+/**
+ * Twists `upper` about its own length (the line from its pivot to the hinge)
+ * so the hinge's bend plane swings toward the target. The hinge pivot lies on
+ * that line, so an elbow or knee placed by an earlier goal stays where it is;
+ * only the forearm or lower leg sweeps around. Without this a hinge-only chain
+ * can bend but never aim sideways.
+ */
+function stepTwist(frame: PoseFrame, upper: BoneId, hinge: BoneId, goal: IkGoal): void {
+  const worlds = forwardKinematics(frame)
+  const pivot = new Vector3().setFromMatrixPosition(worlds.get(upper)!)
+  const joint = new Vector3().setFromMatrixPosition(worlds.get(hinge)!)
+  const axis = joint.clone().sub(pivot)
+  if (axis.lengthSq() < 1e-8) return
+  axis.normalize()
+  const across = (point: Vector3) => {
+    const offset = point.clone().sub(joint)
+    return offset.sub(axis.clone().multiplyScalar(offset.dot(axis)))
+  }
+  const from = across(landmarkPosition(worlds, goal.effector))
+  const to = across(targetPosition(worlds, goal))
+  if (from.lengthSq() < 1e-8 || to.lengthSq() < 1e-8) return
+  const angle = clamp(Math.atan2(axis.dot(from.clone().cross(to)), from.dot(to)), -MAX_STEP, MAX_STEP)
+  rotateInWorld(frame, upper, new Quaternion().setFromAxisAngle(axis, angle))
+}
+
+/** Hinges in the chain whose parent bone is not in it: their parent may still twist (see stepTwist). */
+function twistableHinges(chain: BoneId[]): Array<[BoneId, BoneId]> {
+  return chain
+    .filter((bone) => HINGE_LIMITS[bone] && !chain.includes(BONE_MAP[bone].parent!))
+    .map((hinge) => [BONE_MAP[hinge].parent!, hinge])
+}
+
 /** The [upper, hinge] pair a chain ends with, when the effector sits past the hinge. */
 function twoBonePair(chain: BoneId[], effector: string): [BoneId, BoneId] | null {
   if (chain.length < 2) return null
@@ -261,6 +293,7 @@ export function resolveChains(goals: IkGoal[]): BoneId[][] {
  */
 export function solveIk(start: PoseFrame, goals: IkGoal[], chains: BoneId[][]): IkResult {
   const frame: PoseFrame = { ...start, bones: structuredClone(start.bones) }
+  const twists = chains.map(twistableHinges)
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     goals.forEach((goal, index) => {
       const pair = twoBonePair(chains[index], goal.effector)
@@ -268,11 +301,12 @@ export function solveIk(start: PoseFrame, goals: IkGoal[], chains: BoneId[][]): 
       if (pair) stepTwoBone(frame, pair[0], pair[1], goal)
       // CCD walks from the bone nearest the effector toward the root.
       for (const bone of [...rest].reverse()) stepBone(frame, bone, goal)
+      for (const [upper, hinge] of twists[index]) stepTwist(frame, upper, hinge, goal)
     })
     if (goals.every((goal) => goalError(frame, goal) < TOLERANCE)) break
   }
 
-  const changed = [...new Set(chains.flat())]
+  const changed = [...new Set([...chains.flat(), ...twists.flat().map(([upper]) => upper)])]
   for (const bone of changed) {
     const r = frame.bones[bone]
     frame.bones[bone] = { x: round(r.x, 1), y: round(r.y, 1), z: round(r.z, 1) }

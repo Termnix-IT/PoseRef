@@ -119,6 +119,9 @@ do not have to work out the angles. Elbows and knees only bend the natural way; 
 natural limits.
 - Default chains: elbow -> upper arm; wrist, palm, fingertips -> upper arm + forearm; knee -> thigh;
   ankle, sole, toe -> thigh + lower leg; chin, nose, head -> neck + head; neckBase -> chest.
+- When a chain has an elbow or knee but not the bone above it (e.g. \`["rightForearm"]\` after an earlier goal
+  used the upper arm), the upper arm or thigh may still twist about its own length to aim the bend. That twist
+  keeps the elbow or knee where the earlier goal put it.
 - Goals are solved in order and re-checked on every pass. Bones used by an earlier goal are left out of later
   goals' default chains, so list the contact that must hold most firmly first.
 - \`offset\` is added to the target in world space. Joint landmarks sit inside the limbs, so leave the limb radii
