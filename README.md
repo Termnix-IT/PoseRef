@@ -5,80 +5,50 @@
 参考画像用のプロンプト（日本語 / 英語）をコピーできます。UI は日本語です。
 MCP に対応した AI エージェント（Claude Code / Codex）から、文章の指示でポーズとカメラを作らせることもできます。
 
-## 技術スタック
+## 使い方
 
-- React 19 / TypeScript / Vite
-- Three.js / React Three Fiber / @react-three/drei
-- Zustand（状態管理）
-- Node.js サーバー（`server/`）: MCP エンドポイントとブラウザへの中継。MCP SDK v2 / ws / zod
+Node.js 22.18 以上が必要です。AI エージェントから使う場合は、Claude Code か Codex も入れておいてください。
 
-## セットアップ
-
-Node.js 22.18 以上が必要です（サーバーの TypeScript を Node が直接実行するため）。
-リポジトリはどこに置いてもかまいません。
+### 導入（最初の 1 回だけ）
 
 ```bash
-npm install
-npm start
+npx poseref setup
 ```
 
-`npm start` はビルドしてから PoseRef サーバーを `http://127.0.0.1:47173` で起動し、ブラウザで画面を開きます。
-ブラウザを自動で開きたくない場合は `POSEREF_NO_OPEN=1` を、別のポートを使う場合は `POSEREF_PORT` を指定します。
-サーバーは `127.0.0.1` でのみ待ち受けるので、同じ PC の外からは接続できません。
+見つかった Claude Code と Codex に PoseRef を登録します。実行する前に、何を登録し、どのファイルを書き換えるかを表示して確認を求めます。
+確認を省く場合は `--yes`、表示だけして何も変えない場合は `--dry-run` を付けます。
+終わったら Claude Code / Codex を起動し直し、「PoseRef で、椅子に座って頬杖をつくポーズを斜め前から撮って」のように頼んでください。
+エージェントが最初に PoseRef のツールを使ったときに、PoseRef が起動してブラウザで画面が開きます。
+3D の描画はブラウザで行うので、このタブは開いたままにしてください。ヘッダーに「AI連携: 接続中」と表示されていれば準備できています。
 
-開発時は次のコマンドを使います。
+登録するコマンドはバージョンを固定しています（`npx -y poseref@<バージョン> mcp`）。新しい版が公開されても、知らないうちに別のコードが動くことはありません。
+更新するときは `npx poseref@latest setup` を実行し直してください。
+
+### エージェントなしで使う
 
 ```bash
-npm run dev       # Vite 開発サーバー（http://localhost:5173）。MCP も 47173 番で同時に起動する
-npm run build     # 型チェック + 本番ビルド（dist/）
-npm run typecheck # 型チェックのみ
-npm test          # IK と体の位置の計算のテスト（ブラウザ不要）
-npm run preview   # ビルド結果のプレビュー（AI 連携なし）
+npx poseref        # PoseRef を起動してブラウザで開く
+npx poseref stop   # 起動中の PoseRef を止める
 ```
 
-`npm start` と `npm run dev` は同じ 47173 番を使うので、同時には起動できません。
+画面だけでもポーズ作り・PNG 書き出し・プロンプトのコピーができます。
 
-## AI エージェント連携（MCP）
+### 設定
 
-PoseRef サーバーは MCP（Model Context Protocol）のエンドポイント `http://127.0.0.1:47173/mcp` を持っています。
-Claude Code や Codex に一度登録しておくと、どのディレクトリで起動したエージェントからでも
-「PoseRef で、椅子に座って頬杖をつくポーズを斜め前から」のように頼むだけで、開いているブラウザの PoseRef が変わります。
-3D の描画はブラウザで行うので、使うときは `npm start` を実行して PoseRef の画面を開いておいてください。
-ヘッダーに「AI連携: 接続中」と表示されていれば準備できています。
+| 環境変数 | 内容 |
+| --- | --- |
+| `POSEREF_PORT` | 使うポート（既定は 47173）。`npx poseref setup` のときに指定すると、エージェントの登録にも引き継がれます |
+| `POSEREF_NO_OPEN` | 値を入れると、ブラウザを自動で開きません |
 
-### 登録（最初の 1 回だけ）
-
-Claude Code（`--scope user` にすると、どのディレクトリで起動しても使えます）:
-
-```bash
-claude mcp add --transport http --scope user poseref http://127.0.0.1:47173/mcp
-```
-
-リポジトリには `.mcp.json` も入れてあるので、このリポジトリの中で Claude Code を起動した場合は登録しなくても使えます
-（初回に使用を許可するかどうかを聞かれます）。
-Claude Code はツールを呼ぶたびに許可を求めることがあります。毎回の確認を省く場合は、`~/.claude/settings.json` の
-`permissions.allow` に `"mcp__poseref"` を加えると、PoseRef のツールすべてが許可されます。
-
-Codex（CLI・IDE 拡張・デスクトップアプリ共通の `~/.codex/config.toml` に追記します）:
-
-```toml
-[mcp_servers.poseref]
-url = "http://127.0.0.1:47173/mcp"
-
-[mcp_servers.poseref.tools.set_scene]
-approval_mode = "approve"
-
-[mcp_servers.poseref.tools.reach]
-approval_mode = "approve"
-```
+### Claude Code と Codex の確認
 
 Codex は、読み取り専用ではない MCP ツールを呼ぶたびに承認を求めます。`set_scene` と `reach` は PoseRef の画面だけを変える操作で、
-「元に戻す」で取り消せるので、上の設定で毎回の承認を省いています。省かない場合は、ポーズを直すたびに承認することになります。
-また `codex exec` のような非対話の実行では、承認できないため `set_scene` がキャンセルされます。
+「元に戻す」で取り消せるので、`npx poseref setup` はこの 2 つを承認なしで実行する設定を `~/.codex/config.toml` に追記します。
+追記の前に同じ場所へバックアップを作り、Codex が設定を読めなくなった場合は元に戻します。
+この設定がないと、ポーズを直すたびに承認することになり、`codex exec` のような非対話の実行では `set_scene` がキャンセルされます。
 
-`POSEREF_PORT` でポートを変えた場合は、登録する URL のポートも合わせて変えてください。
-エージェントは起動時に MCP へ接続するので、PoseRef サーバーを後から起動したときはエージェントを再起動するか、
-Claude Code なら `/mcp` から再接続します。
+Claude Code もツールを呼ぶたびに許可を求めることがあります。毎回の確認を省く場合は、`~/.claude/settings.json` の
+`permissions.allow` に `"mcp__poseref"` を加えると、PoseRef のツールすべてが許可されます（セットアップはここを変えません）。
 
 ### エージェントが使うツール
 
@@ -87,7 +57,7 @@ Claude Code なら `/mcp` から再接続します。
 | `get_pose_spec` | ボーンの軸と符号の決まり、接地、カメラ、プリセットの実例をまとめた説明書を返す。内容はコードの定数から生成される |
 | `get_scene` | 現在のポーズ・キャラクターの向きと位置・カメラ・アスペクト比を JSON で返す |
 | `set_scene` | ポーズ・キャラクター・カメラ・アスペクト比を適用する。ポーズを指定したときは、体の最下点が床にちょうど着くよう腰の高さを自動で合わせる（ジャンプなどは `pose.ground: false` で無効にできる）。未知のボーン名や範囲外の値は、何も適用せずにエラーを返す |
-| `render_views` | 現在のカメラ・正面・側面・真上などを 1 枚の PNG に並べて返す。同じ画像を一時フォルダにも保存し、そのパスを返す |
+| `render_views` | 現在のカメラ・正面・側面・真上などを 1 枚の PNG に並べて返す。同じ画像を `~/.poseref/renders` にも保存し、そのパスを返す |
 | `reach` | 逆運動学（IK）。「右肘を右膝の上へ」「左手のひらを腰へ」のように、関節の目印を別の目印や座標へ動かすよう骨を回す。肘と膝は自然な方向にだけ曲がり、胸・首・頭は可動域の範囲内に収める。届かなかった目標は残りの距離とともに返す |
 | `get_joint_positions` | 肘・手のひら・膝・足裏・顎などの位置（メートル）と、体の最下点の高さを返す。指定した 2 点の距離も計算し、手が顎に触れているか、足が床に着いているかを数値で確かめるのに使う |
 
@@ -96,8 +66,80 @@ Claude Code なら `/mcp` から再接続します。
 AI による変更は、ヘッダーの「元に戻す」（または Ctrl+Z）で 1 回ずつ取り消せます。
 `render_views` が画像をファイルにも保存するのは、MCP の画像をモデルに渡せないクライアントでも、
 エージェントがそのファイルを開いて確認できるようにするためです。
-
 PoseRef のタブを複数開いている場合は、最後に操作したタブが対象になります。
+
+### 仕組みとセキュリティ
+
+エージェントが起動する `npx poseref mcp` は、エージェントとは標準入出力（stdio）で MCP をやり取りします。
+ブラウザへの指示だけを、バックグラウンドで動く PoseRef サーバー（`http://127.0.0.1:47173`）に送ります。
+サーバーはエージェントのセッションが終わっても動き続けるので、別のセッションからも同じタブを使えます。
+
+- サーバーは `127.0.0.1` でのみ待ち受け、同じ PC の外からは接続できません。`Host` と `Origin` を確かめ、ほかの Web サイトからの操作を拒否します。
+- `~/.poseref/secret` に、利用者ごとの秘密鍵を本人だけが読める権限で作ります。`poseref mcp` は、ポートにいる相手がこの鍵を持つ PoseRef であることを確かめてから通信し、別のプログラムがポートを使っていた場合は何も送りません。サーバーの内部用の受け口（`/poseref/*`）は、この鍵がないと使えません。
+- `render_views` の画像は `~/.poseref/renders` に最新 20 枚まで残します。
+- npm パッケージには、ビルド済みの画面（`dist/`）とサーバー（`dist-server/`）だけが入っています。インストール時に実行されるスクリプトはありません。
+
+### アンインストール
+
+```bash
+npx poseref stop
+claude mcp remove poseref --scope user
+codex mcp remove poseref
+```
+
+最後に、必要なら `~/.poseref` フォルダを削除してください。
+`codex mcp remove` で承認設定が残った場合は、`~/.codex/config.toml` の `[mcp_servers.poseref.tools.*]` の行を消してください。
+
+## 開発
+
+```bash
+git clone https://github.com/Termnix-IT/PoseRef.git
+cd PoseRef
+npm install
+npm run dev
+```
+
+| コマンド | 内容 |
+| --- | --- |
+| `npm run dev` | Vite 開発サーバー（`http://localhost:5173`）。MCP の HTTP エンドポイントも 47173 番で同時に起動する |
+| `npm run build` | 型チェック、画面のビルド（`dist/`）、サーバーのビルド（`dist-server/cli.js`） |
+| `npm start` | ビルドしてから、公開版と同じ `dist-server/cli.js` で PoseRef を起動する |
+| `npm test` | IK・体の位置の計算・認証・内部用の受け口・セットアップのテスト（ブラウザ不要） |
+| `npm run typecheck` | 型チェックのみ |
+| `npm run preview` | ビルド結果のプレビュー（AI 連携なし） |
+
+`npm run dev` と `npm start`、エージェントが起動した PoseRef は、同じ 47173 番を使います。開発を始める前に `npx poseref stop` で止めてください。
+
+開発中は、エージェントを MCP の HTTP エンドポイントで登録すると、ビルドせずに試せます。
+リポジトリの `.mcp.json` に登録を入れてあるので、このリポジトリの中で Claude Code を起動すればそのまま使えます（初回に使用を許可するかどうかを聞かれます）。
+ほかの場所から使う場合は次のように登録します。
+
+```bash
+claude mcp add --transport http --scope user poseref-dev http://127.0.0.1:47173/mcp
+```
+
+Codex の場合は `~/.codex/config.toml` に次を追記します。
+
+```toml
+[mcp_servers.poseref-dev]
+url = "http://127.0.0.1:47173/mcp"
+
+[mcp_servers.poseref-dev.tools.set_scene]
+approval_mode = "approve"
+
+[mcp_servers.poseref-dev.tools.reach]
+approval_mode = "approve"
+```
+
+npm への公開は `npm publish` で行います。`prepublishOnly` でビルドとテストが走ります。
+公開する中身は、事前に `npm pack --dry-run` で確かめられます。
+
+## 技術スタック
+
+- React 19 / TypeScript / Vite
+- Three.js / React Three Fiber / @react-three/drei
+- Zustand（状態管理）
+- Node.js サーバー（`server/`）: `poseref` コマンド、MCP サーバー、ブラウザへの中継。MCP SDK v2 / ws / zod
 
 ## 画面構成
 
@@ -161,7 +203,8 @@ Yawか、骨盤そのもののドラッグで変えます。
 ## ディレクトリ構成
 
 ```
-server/        PoseRef サーバー（npm start の入口、MCP ツール、ブラウザとの中継、Vite 用プラグイン）
+server/        `poseref` コマンド（cli.ts）、PoseRef サーバー、MCP ツール、ブラウザとの中継、認証、セットアップ、Vite 用プラグイン
+test/          node:test のテスト（npm test）
 src/
   agent/       サーバーとの WebSocket 接続と、やり取りするメッセージの型
   components/
@@ -182,8 +225,9 @@ src/
 ドラッグ用ハンドルの位置と大きさは `src/constants/bones.ts` の `BONE_HANDLES` で調整します。
 半径は必ずその関節まわりの体より大きくしてください。体に埋まったハンドルは見えず、クリックもできません。
 
-`server/` は Node がビルドなしで直接実行します。サーバーから読み込む `src/` のファイル（`constants/` の一部、
-`utils/math.ts`、`agent/protocol.ts`）では、実行時に必要な import に `.ts` 拡張子を付け、型以外の import を増やさないでください。
+`server/` と `test/` は、開発中は Node がビルドなしで直接実行し、公開用には `npm run build:server` で `dist-server/cli.js` にまとめます。
+サーバーとテストから読み込む `src/` のファイル（`constants/` の一部、`utils/math.ts`・`ik.ts`・`jointPositions.ts`・`rotation.ts`、
+`agent/protocol.ts`）では、実行時に必要な import に `.ts` 拡張子を付け、ブラウザ専用のモジュールを import しないでください。
 
 UI の文言は `src/constants/uiText.ts` に集約しています。ポーズを追加する場合は
 `src/constants/posePresets.ts` にプリセットを追記し、`src/types/index.ts` の `PosePresetId` に ID を加えます。
