@@ -129,3 +129,15 @@ export const reachSchema = z.strictObject({
     .describe('Solved in order and re-checked on every pass, so list the goal that must hold most firmly first.'),
   ground: z.boolean().optional().describe('Default true: keep the body resting on the floor afterwards.'),
 })
+
+/**
+ * Parameters the internal /poseref/bridge endpoint accepts per method. The
+ * stdio MCP process validates tool input already; the server checks again so
+ * the endpoint never forwards anything the browser side does not expect.
+ */
+export const bridgeParamSchemas = {
+  getScene: z.strictObject({}),
+  getJoints: z.strictObject({}),
+  setScene: sceneSchema,
+  renderViews: renderViewsSchema.required(),
+}

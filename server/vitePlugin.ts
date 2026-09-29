@@ -34,10 +34,14 @@ export function poseRefBridge(): Plugin {
     async configureServer(vite) {
       // Loaded lazily so the config bundle (and `vite build`) never pulls in the server or the app constants.
       const { createPoseRefServer } = await import('./app.ts')
+      const { loadOrCreateSecret } = await import('./auth.ts')
+      const { POSEREF_VERSION } = await import('./version.ts')
       const devPort = vite.config.server.port ?? 5173
       const server = createPoseRefServer({
         port: resolvePort(),
         extraOrigins: [`http://localhost:${devPort}`, `http://127.0.0.1:${devPort}`],
+        secret: loadOrCreateSecret(),
+        version: POSEREF_VERSION,
       })
       let closed = false
       listenWithRetry(() => server.listen(), () => closed)

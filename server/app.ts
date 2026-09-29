@@ -1,11 +1,13 @@
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { extname, join, normalize, resolve, sep } from 'node:path'
 import { localhostHostValidation, localhostOriginValidation, toNodeHandler } from '@modelcontextprotocol/node'
 import { WebSocketServer } from 'ws'
 import { BRIDGE_PATH } from '../src/agent/protocol.ts'
 import { BrowserBridge } from './bridge.ts'
+import { createInternalHandler } from './internal.ts'
 import { createPoseRefMcpHandler } from './mcp.ts'
 
 export const MCP_PATH = '/mcp'
@@ -18,6 +20,11 @@ export interface PoseRefServerOptions {
   staticDir?: string
   /** Page origins besides this server's own that may open the browser bridge (the Vite dev server). */
   extraOrigins?: string[]
+  /** Per-user secret (see auth.ts) that PoseRef's stdio MCP processes use to find and call this server. */
+  secret: Buffer
+  version: string
+  /** Lets `poseref stop` end the process; omitted when another process (Vite) owns the server. */
+  onShutdown?: () => void
 }
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -51,9 +58,10 @@ async function serveStatic(root: string, req: IncomingMessage, res: ServerRespon
 }
 
 /**
- * One local process that serves the PoseRef app, the MCP endpoint for AI agents
- * (`/mcp`, Streamable HTTP) and the WebSocket the app connects back on (`/ws`).
- * Agents register only the URL, so the repository can live anywhere.
+ * One local process that serves the PoseRef app, the WebSocket the app connects
+ * back on (`/ws`), and two ways in for AI agents: the Streamable HTTP MCP
+ * endpoint (`/mcp`) for agents registered by URL, and the internal endpoints
+ * (`/poseref/*`) that the stdio MCP processes started by `poseref mcp` use.
  */
 export function createPoseRefServer(options: PoseRefServerOptions) {
   const appUrl = `http://${HOST}:${options.port}`
@@ -64,9 +72,16 @@ export function createPoseRefServer(options: PoseRefServerOptions) {
   // Rejects requests whose Host is not loopback (DNS rebinding) and cross-site pages calling /mcp.
   const validateHost = localhostHostValidation()
   const validateOrigin = localhostOriginValidation()
+  const internal = createInternalHandler({
+    secret: options.secret,
+    version: options.version,
+    bridge,
+    onShutdown: options.onShutdown,
+  })
 
   const server = createServer((req, res) => {
     if (!validateHost(req, res)) return
+    if (internal(req, res)) return
     const pathname = new URL(req.url ?? '/', 'http://localhost').pathname
     if (pathname === MCP_PATH) {
       if (!validateOrigin(req, res)) return
@@ -97,6 +112,10 @@ export function createPoseRefServer(options: PoseRefServerOptions) {
   return {
     appUrl,
     mcpUrl: `${appUrl}${MCP_PATH}`,
+    /** The port actually bound; differs from options.port only when that was 0 (tests). */
+    port(): number {
+      return (server.address() as AddressInfo).port
+    },
     listen(): Promise<void> {
       return new Promise((resolveListen, rejectListen) => {
         server.once('error', rejectListen)
