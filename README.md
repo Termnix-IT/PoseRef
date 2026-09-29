@@ -20,6 +20,8 @@ npx poseref setup
 終わったら Claude Code / Codex を起動し直し、「PoseRef で、椅子に座って頬杖をつくポーズを斜め前から撮って」のように頼んでください。
 エージェントが最初に PoseRef のツールを使ったときに、PoseRef が起動してブラウザで画面が開きます。
 3D の描画はブラウザで行うので、このタブは開いたままにしてください。ヘッダーに「AI連携: 接続中」と表示されていれば準備できています。
+タブを閉じてしまっても、次にツールを使ったときに開き直します（ユーザーがわざと閉じた直後に何度も開かないよう、自動で開くのは 60 秒に 1 回までです）。
+「PoseRef を開いて」と頼むと、エージェントが `open_poseref` で画面を開きます。すでにタブが開いていれば、新しいタブは増やしません。
 
 登録するコマンドはバージョンを固定しています（`npx -y poseref@<バージョン> mcp`）。新しい版が公開されても、知らないうちに別のコードが動くことはありません。
 更新するときは `npx poseref@latest setup` を実行し直してください。
@@ -42,8 +44,9 @@ npx poseref stop   # 起動中の PoseRef を止める
 
 ### Claude Code と Codex の確認
 
-Codex は、読み取り専用ではない MCP ツールを呼ぶたびに承認を求めます。`set_scene` と `reach` は PoseRef の画面だけを変える操作で、
-「元に戻す」で取り消せるので、`npx poseref setup` はこの 2 つを承認なしで実行する設定を `~/.codex/config.toml` に追記します。
+Codex は、読み取り専用ではない MCP ツールを呼ぶたびに承認を求めます。`set_scene` と `reach` は PoseRef の画面だけを変え、
+「元に戻す」で取り消せる操作で、`open_poseref` は PoseRef の画面を開くだけの操作です。そのため `npx poseref setup` は、この 3 つを承認なしで実行する設定を
+`~/.codex/config.toml` に追記します。
 追記の前に同じ場所へバックアップを作り、Codex が設定を読めなくなった場合は元に戻します。
 この設定がないと、ポーズを直すたびに承認することになり、`codex exec` のような非対話の実行では `set_scene` がキャンセルされます。
 
@@ -54,6 +57,7 @@ Claude Code もツールを呼ぶたびに許可を求めることがありま�
 
 | ツール | 内容 |
 | --- | --- |
+| `open_poseref` | PoseRef が止まっていれば起動し、ブラウザで画面を開く。タブがすでに開いていれば何もしない |
 | `get_pose_spec` | ボーンの軸と符号の決まり、接地、カメラ、プリセットの実例をまとめた説明書を返す。内容はコードの定数から生成される |
 | `get_scene` | 現在のポーズ・キャラクターの向きと位置・カメラ・アスペクト比を JSON で返す |
 | `set_scene` | ポーズ・キャラクター・カメラ・アスペクト比を適用する。ポーズを指定したときは、体の最下点が床にちょうど着くよう腰の高さを自動で合わせる（ジャンプなどは `pose.ground: false` で無効にできる）。未知のボーン名や範囲外の値は、何も適用せずにエラーを返す |
@@ -128,6 +132,9 @@ url = "http://127.0.0.1:47173/mcp"
 approval_mode = "approve"
 
 [mcp_servers.poseref-dev.tools.reach]
+approval_mode = "approve"
+
+[mcp_servers.poseref-dev.tools.open_poseref]
 approval_mode = "approve"
 ```
 

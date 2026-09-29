@@ -1,6 +1,6 @@
 {
   "name": "poseref",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Pose and composition reference maker for image-generation AI, with an MCP server so Claude Code and Codex can pose it",
   "keywords": [
     "pose",

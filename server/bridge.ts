@@ -5,6 +5,7 @@ import type {
   BridgeRequest,
   BrowserToServerMessage,
 } from '../src/agent/protocol.ts'
+import type { OpenResult, PageOpener } from './opener.ts'
 
 const REQUEST_TIMEOUT_MS = 20_000
 
@@ -17,15 +18,28 @@ interface Pending {
 
 /**
  * What the MCP tools need from the browser: send a request to the open PoseRef
- * tab and get its answer. Implemented in-process by BrowserBridge and, for
- * stdio MCP processes, by RemoteBridge over the server's internal endpoint.
+ * tab and get its answer, and open the page when there is none. Implemented
+ * in-process by BrowserBridge and, for stdio MCP processes, by RemoteBridge
+ * over the server's internal endpoint.
  */
 export interface BridgeClient {
   request<M extends BridgeMethod>(method: M, params: BridgeMethods[M]['params']): Promise<BridgeMethods[M]['result']>
+  /**
+   * Starts PoseRef if needed and opens the page when no tab is connected.
+   * `automatic` (a tool found no tab) is rate-limited; an explicit request is not.
+   */
+  open(automatic: boolean): Promise<OpenResult>
 }
 
 /** Thrown when no browser tab is connected; the message is meant for the agent to relay. */
 export class NoBrowserError extends Error {}
+
+export function noBrowserError(url: string): NoBrowserError {
+  return new NoBrowserError(
+    `No PoseRef browser tab is connected. Call open_poseref, or ask the user to open ${url} in a browser, then retry. ` +
+      'If that page does not load, PoseRef is not running: the user can start it with `npx poseref`.',
+  )
+}
 
 /**
  * Tracks the PoseRef browser tabs connected over WebSocket and forwards agent
@@ -36,11 +50,11 @@ export class BrowserBridge implements BridgeClient {
   private readonly tabs: WebSocket[] = []
   private readonly pending = new Map<number, Pending>()
   private nextId = 1
-  private readonly appUrl: string
+  private readonly opener: PageOpener
 
   // Node runs this file with type stripping only, so no constructor parameter properties.
-  constructor(appUrl: string) {
-    this.appUrl = appUrl
+  constructor(opener: PageOpener) {
+    this.opener = opener
   }
 
   get connectedTabs(): number {
@@ -54,16 +68,14 @@ export class BrowserBridge implements BridgeClient {
     socket.on('error', () => socket.close())
   }
 
+  async open(automatic: boolean): Promise<OpenResult> {
+    const result = await this.opener.ensureTab(automatic, async () => this.tabs.length)
+    return { ...result, url: this.opener.url, startedServer: false }
+  }
+
   request<M extends BridgeMethod>(method: M, params: BridgeMethods[M]['params']): Promise<BridgeMethods[M]['result']> {
     const socket = this.tabs[this.tabs.length - 1]
-    if (!socket) {
-      return Promise.reject(
-        new NoBrowserError(
-          `No PoseRef browser tab is connected. Ask the user to open ${this.appUrl} in a browser, then retry. ` +
-            'If that page does not load, PoseRef is not running: the user can start it with `npx poseref`.',
-        ),
-      )
-    }
+    if (!socket) return Promise.reject(noBrowserError(this.opener.url))
     const id = this.nextId++
     const message: BridgeRequest<M> = { type: 'request', id, method, params }
     return new Promise((resolve, reject) => {

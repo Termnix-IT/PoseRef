@@ -1,12 +1,11 @@
 import { spawn } from 'node:child_process'
 import type { BridgeMethod, BridgeMethods } from '../src/agent/protocol.ts'
 import { bearerToken, newNonce, verifyIdentityProof } from './auth.ts'
-import type { BridgeClient } from './bridge.ts'
-import { openBrowser } from './browser.ts'
+import { noBrowserError, type BridgeClient } from './bridge.ts'
 import type { IdentifyResponse } from './internal.ts'
+import { PageOpener, type OpenResult } from './opener.ts'
 
 const START_TIMEOUT_MS = 15_000
-const TAB_WAIT_MS = 20_000
 const POLL_MS = 300
 const REQUEST_TIMEOUT_MS = 30_000
 
@@ -18,6 +17,8 @@ export interface RemoteBridgeOptions {
   /** False (POSEREF_NO_OPEN) keeps the browser closed, e.g. for tests; the tools then report the missing tab. */
   openBrowser: boolean
   log: (message: string) => void
+  /** Replaced in tests so no real browser opens. */
+  openPage?: (url: string) => void
 }
 
 type Probe = { kind: 'poseref'; tabs: number } | { kind: 'absent' } | { kind: 'foreign' }
@@ -36,12 +37,19 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 export class RemoteBridge implements BridgeClient {
   private readonly options: RemoteBridgeOptions
   private readonly baseUrl: string
+  private readonly opener: PageOpener
   private ready: Promise<void> | null = null
-  private browserOpened = false
+  private startedServer = false
 
   constructor(options: RemoteBridgeOptions) {
     this.options = options
     this.baseUrl = `http://127.0.0.1:${options.port}`
+    this.opener = new PageOpener({
+      url: this.baseUrl,
+      enabled: options.openBrowser,
+      log: options.log,
+      openPage: options.openPage,
+    })
   }
 
   async request<M extends BridgeMethod>(method: M, params: BridgeMethods[M]['params']): Promise<BridgeMethods[M]['result']> {
@@ -57,6 +65,18 @@ export class RemoteBridge implements BridgeClient {
     }
   }
 
+  async open(automatic: boolean): Promise<OpenResult> {
+    this.ready = null
+    await this.ensureReady()
+    const result = await this.opener.ensureTab(automatic, async () => {
+      const probe = await this.probe()
+      return probe.kind === 'poseref' ? probe.tabs : 0
+    })
+    const startedServer = this.startedServer
+    this.startedServer = false
+    return { ...result, url: this.baseUrl, startedServer }
+  }
+
   private ensureReady(): Promise<void> {
     this.ready ??= this.prepare().catch((error) => {
       this.ready = null
@@ -65,20 +85,17 @@ export class RemoteBridge implements BridgeClient {
     return this.ready
   }
 
+  /** Makes sure the listener on the port is PoseRef, starting it if nothing is there. */
   private async prepare(): Promise<void> {
     let probe = await this.probe()
     if (probe.kind === 'foreign') throw this.foreignError()
     if (probe.kind === 'absent') {
       this.options.log('Starting the PoseRef server…')
       this.options.startServer()
+      this.startedServer = true
       probe = await this.waitFor((next) => next.kind !== 'absent', START_TIMEOUT_MS)
       if (probe.kind === 'foreign') throw this.foreignError()
       if (probe.kind === 'absent') throw new Error('The PoseRef server did not start. Run `npx poseref start` in a terminal to see why.')
-    }
-    if (this.options.openBrowser && probe.kind === 'poseref' && probe.tabs === 0 && !this.browserOpened) {
-      this.browserOpened = true
-      openBrowser(this.baseUrl, this.options.log)
-      await this.waitFor((next) => next.kind === 'poseref' && next.tabs > 0, TAB_WAIT_MS)
     }
   }
 
@@ -133,6 +150,8 @@ export class RemoteBridge implements BridgeClient {
     }
     const body = (await response.json().catch(() => ({}))) as { ok?: boolean; result?: unknown; error?: string }
     if (body.ok === true) return body.result as BridgeMethods[M]['result']
+    // 503 is the server's "no browser tab" answer; the tools react to it by opening the page.
+    if (response.status === 503) throw noBrowserError(this.baseUrl)
     if (body.ok === false && body.error) throw new Error(body.error)
     throw new Error(`The PoseRef server rejected the request (HTTP ${response.status}${body.error ? `: ${body.error}` : ''}).`)
   }

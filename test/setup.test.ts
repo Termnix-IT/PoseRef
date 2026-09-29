@@ -17,12 +17,13 @@ describe('MCP launch command', () => {
 })
 
 describe('Codex approval settings', () => {
-  test('adds both write tools to an empty config', () => {
+  test('adds every non-read-only tool to an empty config', () => {
     const { text, added } = appendCodexApprovals('')
-    assert.deepEqual(added, ['set_scene', 'reach'])
+    assert.deepEqual(added, ['set_scene', 'reach', 'open_poseref'])
     assert.match(text, /^# Added by `poseref setup`/)
     assert.match(text, /\[mcp_servers\.poseref\.tools\.set_scene\]\napproval_mode = "approve"\n/)
     assert.match(text, /\[mcp_servers\.poseref\.tools\.reach\]\napproval_mode = "approve"\n/)
+    assert.match(text, /\[mcp_servers\.poseref\.tools\.open_poseref\]\napproval_mode = "approve"\n/)
   })
 
   test('keeps the existing file untouched and appends after a blank line', () => {
@@ -41,7 +42,7 @@ describe('Codex approval settings', () => {
   test('only adds the tables that are missing and never rewrites existing ones', () => {
     const existing = '[mcp_servers.poseref.tools.set_scene]\napproval_mode = "prompt"\n'
     const { text, added } = appendCodexApprovals(existing)
-    assert.deepEqual(added, ['reach'])
+    assert.deepEqual(added, ['reach', 'open_poseref'])
     assert.ok(text.includes('approval_mode = "prompt"'))
     assert.equal(text.match(/tools\.set_scene\]/g)?.length, 1)
   })
