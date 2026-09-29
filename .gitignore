@@ -5,3 +5,6 @@ dist-ssr
 .DS_Store
 *.tsbuildinfo
 dist-server
+.env
+.env.*
+.claude/settings.local.json

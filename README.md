@@ -210,6 +210,8 @@ Yawか、骨盤そのもののドラッグで変えます。
 ## ディレクトリ構成
 
 ```
+docs/          MVP 時点の仕様書（現在の仕様は本 README。`仕様MVP.md` は実装と異なる部分があります）
+public/        ファビコンなど、ビルド時にそのまま配布するファイル
 server/        `poseref` コマンド（cli.ts）、PoseRef サーバー、MCP ツール、ブラウザとの中継、認証、セットアップ、Vite 用プラグイン
 test/          node:test のテスト（npm test）
 src/
@@ -219,7 +221,7 @@ src/
     panels/    Pose / Character / Camera / AspectRatio / Background / Export / Prompt
     ui/        Button, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
     viewport/  Viewport, SceneCanvas, CameraRig, Mannequin, BoneHandle, Ground, Lights,
-               SceneBackground, ExportBridge
+               SceneBackground, ExportBridge, DevBridge（開発時のデバッグ用）, poseDragContext（ドラッグ操作の共有）
   constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds,
                prompts, uiText（UI 文言）
   hooks/       useFitAspect, useExport, useCopyText, usePoseDrag（ビュー上のドラッグ操作）, useUndoShortcut
