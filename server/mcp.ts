@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { createMcpHandler, McpServer, type CallToolResult } from '@modelcontextprotocol/server'
 import type { BoneRotations, SceneDocument } from '../src/types/index.ts'
 import { checkGoal, resolveChains, solveIk, type PoseFrame } from '../src/utils/ik.ts'
-import type { BridgeClient } from './bridge.ts'
+import { NoBrowserError, type BridgeClient } from './bridge.ts'
 import { rendersDir } from './home.ts'
 import { buildPoseSpec } from './poseSpec.ts'
 import { JOINT_IDS, jointPositionsSchema, reachSchema, renderViewsSchema, sceneSchema } from './sceneSchema.ts'
@@ -16,6 +16,7 @@ const DEFAULT_VIEW_SIZE = 480
 const REACHED_WITHIN = 0.02
 
 const INSTRUCTIONS = `PoseRef controls a posable mannequin and camera in the user's browser to build pose and composition reference images.
+The tools open the PoseRef page in the browser by themselves when no tab is connected. When the user asks to open or show PoseRef, call open_poseref.
 Call get_pose_spec once before your first set_scene: it explains the bone axes and sign conventions, which are easy to get wrong.
 Before posing, decide which way the character acts (a target, a direction) and keep that direction across the picture so the action reads in silhouette; aiming, throwing and swinging are done side-on (see the spec's "Composition and readability").
 Then loop: set_scene -> render_views -> compare with the request and check the silhouette from the 'current' view -> adjust. When the request has body parts touching (hand on hip, elbow on knee, hands together), set the rough pose first and then place the contacts with reach (inverse kinematics) instead of guessing angles; confirm with get_joint_positions and only report contact the numbers show. set_scene puts the body on the floor automatically. Stop after two or three rounds when the pose is roughly right; the user fine-tunes by hand and can undo your changes in the app.`
@@ -30,6 +31,22 @@ function compactScene(scene: SceneDocument): string {
     Object.entries(scene.pose?.bones ?? {}).filter(([, r]) => r && (r.x !== 0 || r.y !== 0 || r.z !== 0)),
   )
   return JSON.stringify({ ...scene, pose: { ...scene.pose, bones } })
+}
+
+/**
+ * Runs a browser request. When no tab is connected, opens the page (the bridge
+ * rate-limits automatic opening) and tries once more, so a closed tab does not
+ * leave the agent stuck asking the user.
+ */
+async function withTab<T>(bridge: BridgeClient, call: () => Promise<T>): Promise<T> {
+  try {
+    return await call()
+  } catch (error) {
+    if (!(error instanceof NoBrowserError)) throw error
+    const opened = await bridge.open(true)
+    if (opened.tabs === 0) throw error
+    return await call()
+  }
 }
 
 function failure(error: unknown): CallToolResult {
@@ -72,7 +89,7 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
     },
     async () => {
       try {
-        return text(compactScene(await bridge.request('getScene', {})))
+        return text(compactScene(await withTab(bridge, () => bridge.request('getScene', {}))))
       } catch (error) {
         return failure(error)
       }
@@ -90,7 +107,7 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
     },
     async (scene) => {
       try {
-        const { scene: applied, groundShift } = await bridge.request('setScene', { version: 1, ...scene })
+        const { scene: applied, groundShift } = await withTab(bridge, () => bridge.request('setScene', { version: 1, ...scene }))
         const grounding =
           groundShift === null
             ? ''
@@ -115,10 +132,12 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
     },
     async ({ views, size }) => {
       try {
-        const result = await bridge.request('renderViews', {
-          views: views ?? [...DEFAULT_VIEWS],
-          size: size ?? DEFAULT_VIEW_SIZE,
-        })
+        const result = await withTab(bridge, () =>
+          bridge.request('renderViews', {
+            views: views ?? [...DEFAULT_VIEWS],
+            size: size ?? DEFAULT_VIEW_SIZE,
+          }),
+        )
         const path = await saveRender(result.pngBase64)
         return {
           content: [
@@ -145,7 +164,7 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
     },
     async ({ pairs }) => {
       try {
-        const report = await bridge.request('getJoints', {})
+        const report = await withTab(bridge, () => bridge.request('getJoints', {}))
         const distances = (pairs ?? []).map(([a, b]) => {
           const p = report.joints[a]
           const q = report.joints[b]
@@ -171,7 +190,7 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
     },
     async ({ goals, ground }) => {
       try {
-        const scene = await bridge.request('getScene', {})
+        const scene = await withTab(bridge, () => bridge.request('getScene', {}))
         const frame: PoseFrame = {
           bones: scene.pose!.bones as BoneRotations,
           rootOffset: scene.pose!.rootOffset!,
@@ -185,7 +204,9 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
         }
         const result = solveIk(frame, goals, chains)
         const bones = Object.fromEntries(result.changed.map((bone) => [bone, result.bones[bone]]))
-        const { groundShift } = await bridge.request('setScene', { version: 1, pose: { mode: 'merge', bones, ground } })
+        const { groundShift } = await withTab(bridge, () =>
+          bridge.request('setScene', { version: 1, pose: { mode: 'merge', bones, ground } }),
+        )
 
         const lines = result.goals.map(
           (goal) =>
@@ -198,6 +219,34 @@ export function createPoseRefMcpServer(bridge: BridgeClient): McpServer {
           : ''
         const grounding = groundShift ? `\nGrounded: hips moved ${groundShift > 0 ? 'up' : 'down'} by ${Math.abs(groundShift)} m.` : ''
         return text(`${lines.join('\n')}${advice}${grounding}\nNew rotations: ${JSON.stringify(bones)}`)
+      } catch (error) {
+        return failure(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'open_poseref',
+    {
+      title: 'Open PoseRef',
+      description:
+        "Starts PoseRef if it is not running and opens it in the user's browser. Does nothing when a PoseRef tab is already open. " +
+        'Use it when the user asks to open or show PoseRef; the other tools also open the page on their own when no tab is connected.',
+      // Opens a browser window, so not read-only; calling it again is harmless.
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async () => {
+      try {
+        const result = await bridge.open(false)
+        const started = result.startedServer ? 'Started the PoseRef server. ' : ''
+        if (result.tabs > 0 && !result.opened) {
+          return text(`${started}PoseRef is already open at ${result.url} (${result.tabs} tab${result.tabs === 1 ? '' : 's'}).`)
+        }
+        if (result.tabs > 0) return text(`${started}Opened PoseRef at ${result.url}.`)
+        if (result.disabled) {
+          return text(`${started}Did not open a browser because POSEREF_NO_OPEN is set. Ask the user to open ${result.url}.`)
+        }
+        return text(`${started}Opened ${result.url}, but the page has not connected yet. Ask the user to check the browser window.`)
       } catch (error) {
         return failure(error)
       }

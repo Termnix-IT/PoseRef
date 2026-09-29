@@ -8,6 +8,7 @@ import { after, before, describe, test } from 'node:test'
 import { WebSocket } from 'ws'
 import { bearerToken, newNonce, verifyIdentityProof } from '../server/auth.ts'
 import { createPoseRefServer } from '../server/app.ts'
+import { NoBrowserError } from '../server/bridge.ts'
 import { RemoteBridge } from '../server/remote.ts'
 
 process.env.POSEREF_HOME = mkdtempSync(join(tmpdir(), 'poseref-server-'))
@@ -162,6 +163,110 @@ describe('RemoteBridge (the stdio side)', () => {
       assert.ok(received.every((line) => line.startsWith('GET /poseref/identify')), `unexpected requests: ${received.join(', ')}`)
     } finally {
       await new Promise((resolve) => impostor.close(resolve))
+    }
+  })
+})
+
+/** Calls an MCP tool on the server's HTTP endpoint and returns the text of the result. */
+async function callTool(port: number, name: string, args: Record<string, unknown> = {}): Promise<{ text: string; isError: boolean }> {
+  const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-06-18' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } }),
+  })
+  const raw = await response.text()
+  const line = raw.split('\n').find((l) => l.startsWith('data: '))
+  const result = JSON.parse(line ? line.slice(6) : raw).result
+  return { text: result.content.map((c: { text?: string }) => c.text ?? '').join(''), isError: result.isError === true }
+}
+
+describe('opening the PoseRef page', () => {
+  test('a tool with no tab opens the page, waits for it, and retries', async () => {
+    const port = await freePort()
+    const opened: string[] = []
+    let tab: WebSocket | null = null
+    const server = createPoseRefServer({
+      port,
+      secret,
+      version: '9.9.9',
+      openPage: (url) => {
+        opened.push(url)
+        void fakeTab(port).then((ws) => (tab = ws))
+      },
+    })
+    await server.listen()
+    try {
+      const first = await callTool(port, 'get_scene')
+      assert.equal(first.isError, false, first.text)
+      assert.deepEqual(opened, [`http://127.0.0.1:${port}`])
+
+      // The user closes the tab. Within the cooldown the tools do not open another one.
+      ;(tab as WebSocket | null)?.close()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      const second = await callTool(port, 'get_scene')
+      assert.equal(second.isError, true)
+      assert.match(second.text, /No PoseRef browser tab/)
+      assert.equal(opened.length, 1)
+
+      // An explicit open_poseref is not throttled.
+      const explicit = await callTool(port, 'open_poseref')
+      assert.match(explicit.text, /Opened PoseRef/)
+      assert.equal(opened.length, 2)
+
+      // With a tab already open, open_poseref does not open a duplicate.
+      const again = await callTool(port, 'open_poseref')
+      assert.match(again.text, /already open/)
+      assert.equal(opened.length, 2)
+    } finally {
+      ;(tab as WebSocket | null)?.close()
+      await server.close()
+    }
+  })
+
+  test('the stdio bridge treats the server\'s "no tab" answer as a missing tab and can open the page', async () => {
+    const port = await freePort()
+    const server = createPoseRefServer({ port, secret, version: '9.9.9' })
+    await server.listen()
+    let tab: WebSocket | null = null
+    const opened: string[] = []
+    const bridge = new RemoteBridge({
+      port,
+      secret,
+      openBrowser: true,
+      log: noop,
+      startServer: noop,
+      openPage: (url) => {
+        opened.push(url)
+        void fakeTab(port).then((ws) => (tab = ws))
+      },
+    })
+    try {
+      await assert.rejects(bridge.request('getScene', {}), NoBrowserError)
+      const result = await bridge.open(false)
+      assert.equal(result.opened, true)
+      assert.equal(result.tabs, 1)
+      assert.equal(result.startedServer, false)
+      assert.deepEqual(opened, [`http://127.0.0.1:${port}`])
+      assert.deepEqual(await bridge.request('getScene', {}), { version: 1, echo: 'getScene' })
+    } finally {
+      ;(tab as WebSocket | null)?.close()
+      await server.close()
+    }
+  })
+
+  test('with opening turned off, nothing is opened and the result says so', async () => {
+    const port = await freePort()
+    const server = createPoseRefServer({ port, secret, version: '9.9.9' })
+    await server.listen()
+    let calls = 0
+    const bridge = new RemoteBridge({ port, secret, openBrowser: false, log: noop, startServer: noop, openPage: () => calls++ })
+    try {
+      const result = await bridge.open(false)
+      assert.equal(result.disabled, true)
+      assert.equal(result.tabs, 0)
+      assert.equal(calls, 0)
+    } finally {
+      await server.close()
     }
   })
 })

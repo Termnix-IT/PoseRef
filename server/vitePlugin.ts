@@ -42,6 +42,7 @@ export function poseRefBridge(): Plugin {
         extraOrigins: [`http://localhost:${devPort}`, `http://127.0.0.1:${devPort}`],
         secret: loadOrCreateSecret(),
         version: POSEREF_VERSION,
+        pageUrl: `http://localhost:${devPort}`,
       })
       let closed = false
       listenWithRetry(() => server.listen(), () => closed)

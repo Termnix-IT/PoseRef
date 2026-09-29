@@ -5,8 +5,11 @@ import { join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { DEFAULT_PORT, resolvePort } from './port.ts'
 
-/** Tools that change the scene. Codex asks before each call unless they are approved in config.toml. */
-export const WRITE_TOOLS = ['set_scene', 'reach'] as const
+/**
+ * Tools that are not read-only: two change the scene and open_poseref opens a
+ * browser tab. Codex asks before each call unless they are approved in config.toml.
+ */
+export const WRITE_TOOLS = ['set_scene', 'reach', 'open_poseref'] as const
 
 /**
  * The command agents run to start PoseRef's stdio MCP server. The version is
@@ -32,7 +35,7 @@ export function appendCodexApprovals(toml: string, server = 'poseref'): { text: 
   if (added.length === 0) return { text: toml, added }
   const blocks = added.map((tool) => `[mcp_servers.${server}.tools.${tool}]\napproval_mode = "approve"\n`)
   const separator = toml.length === 0 || toml.endsWith('\n\n') ? '' : toml.endsWith('\n') ? '\n' : '\n\n'
-  const note = '# Added by `poseref setup`: these tools only change the PoseRef tab, and the change can be undone there.\n'
+  const note = '# Added by `poseref setup`: these tools only change or open the PoseRef tab; scene changes can be undone there.\n'
   return { text: `${toml}${separator}${note}${blocks.join('\n')}`, added: [...added] }
 }
 
@@ -131,7 +134,7 @@ function codexSteps(launch: string[], env: string[], log: (m: string) => void): 
       },
     },
     {
-      describe: `Let ${WRITE_TOOLS.join(' and ')} run without a prompt each time: append approval settings to ${configPath} (a backup is kept next to it)`,
+      describe: `Let ${WRITE_TOOLS.join(', ')} run without a prompt each time: append approval settings to ${configPath} (a backup is kept next to it)`,
       apply: () => {
         const before = existsSync(configPath) ? readFileSync(configPath, 'utf8') : ''
         const { text, added } = appendCodexApprovals(before)

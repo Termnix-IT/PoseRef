@@ -9,6 +9,7 @@ import { BRIDGE_PATH } from '../src/agent/protocol.ts'
 import { BrowserBridge } from './bridge.ts'
 import { createInternalHandler } from './internal.ts'
 import { createPoseRefMcpHandler } from './mcp.ts'
+import { PageOpener } from './opener.ts'
 
 export const MCP_PATH = '/mcp'
 /** Loopback only: the server drives the user's browser tab and must not be reachable from the network. */
@@ -25,6 +26,10 @@ export interface PoseRefServerOptions {
   version: string
   /** Lets `poseref stop` end the process; omitted when another process (Vite) owns the server. */
   onShutdown?: () => void
+  /** Where users open the app; defaults to this server. The Vite dev server passes its own URL. */
+  pageUrl?: string
+  /** Replaced in tests so no real browser opens. */
+  openPage?: (url: string) => void
 }
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -66,7 +71,14 @@ async function serveStatic(root: string, req: IncomingMessage, res: ServerRespon
 export function createPoseRefServer(options: PoseRefServerOptions) {
   const appUrl = `http://${HOST}:${options.port}`
   const allowedOrigins = new Set([appUrl, `http://localhost:${options.port}`, ...(options.extraOrigins ?? [])])
-  const bridge = new BrowserBridge(appUrl)
+  const bridge = new BrowserBridge(
+    new PageOpener({
+      url: options.pageUrl ?? appUrl,
+      enabled: !process.env.POSEREF_NO_OPEN,
+      log: (message) => process.stderr.write(`${message}\n`),
+      openPage: options.openPage,
+    }),
+  )
   const mcp = toNodeHandler(createPoseRefMcpHandler(bridge))
   const staticRoot = options.staticDir ? resolve(options.staticDir) : null
   // Rejects requests whose Host is not loopback (DNS rebinding) and cross-site pages calling /mcp.
