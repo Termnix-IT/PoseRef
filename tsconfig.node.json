@@ -23,5 +23,5 @@
     /* server/ runs directly on Node with type stripping */
     "erasableSyntaxOnly": true
   },
-  "include": ["vite.config.ts", "server"]
+  "include": ["vite.config.ts", "server", "test"]
 }

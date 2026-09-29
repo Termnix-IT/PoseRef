@@ -1,8 +1,8 @@
 import { Box3, Vector3 } from 'three'
 import type { Object3D, Scene } from 'three'
-import { JOINT_LANDMARKS } from '../constants/bones'
-import type { BoneId, JointReport } from '../types'
-import { round } from './math'
+import { JOINT_LANDMARKS } from '../constants/bones.ts'
+import type { BoneId, JointReport } from '../types/index.ts'
+import { round } from './math.ts'
 
 function collectBoneGroups(scene: Scene): Map<BoneId, Object3D> {
   const groups = new Map<BoneId, Object3D>()

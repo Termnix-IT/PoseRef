@@ -32,6 +32,7 @@ npm start
 npm run dev       # Vite 開発サーバー（http://localhost:5173）。MCP も 47173 番で同時に起動する
 npm run build     # 型チェック + 本番ビルド（dist/）
 npm run typecheck # 型チェックのみ
+npm test          # IK と体の位置の計算のテスト（ブラウザ不要）
 npm run preview   # ビルド結果のプレビュー（AI 連携なし）
 ```
 
