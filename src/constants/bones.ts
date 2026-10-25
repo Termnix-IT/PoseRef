@@ -82,38 +82,6 @@ export function createZeroRotations(): BoneRotations {
 }
 
 /**
- * PROTOTYPE: two head shapes under comparison; keep one and delete the other.
- * 'egg' is a single ellipsoid. 'jaw' is a round cranium with a small jaw, like
- * the ball-and-jaw construction of figure drawing. Both carry the same cross
- * guide (center line and eye line) on the front half of the head.
- */
-const HEAD_VARIANT: 'egg' | 'jaw' = 'egg'
-
-const HEADS = {
-  egg: {
-    parts: [
-      { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.1, y: 0.12, z: 0.105 } }, position: { x: 0, y: 0.12, z: 0 } },
-      { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.08, z: 0.095 } },
-    ] as PartDef[],
-    eyeLineY: 0.135,
-    nose: { x: 0, y: 0.08, z: 0.125 },
-    chin: { x: 0, y: 0.02, z: 0.06 },
-  },
-  jaw: {
-    parts: [
-      { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.098, y: 0.105, z: 0.1 } }, position: { x: 0, y: 0.14, z: -0.005 } },
-      { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.068, y: 0.065, z: 0.07 } }, position: { x: 0, y: 0.065, z: 0.02 } },
-      { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.085, z: 0.088 } },
-    ] as PartDef[],
-    eyeLineY: 0.14,
-    nose: { x: 0, y: 0.085, z: 0.118 },
-    chin: { x: 0, y: 0.01, z: 0.055 },
-  },
-}
-
-const HEAD = HEADS[HEAD_VARIANT]
-
-/**
  * Body shapes of the mannequin. Every part belongs to a bone and is positioned
  * relative to that bone pivot. Kept deliberately featureless (no eyes, hair or
  * clothing) so image AIs treat it purely as a pose reference; front and back
@@ -130,9 +98,10 @@ const BODY_PARTS: PartDef[] = [
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.15, y: 0.14, z: 0.11 } }, position: { x: 0, y: 0.29, z: 0.012 } },
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: 0.065, y: 0.31, z: -0.07 } },
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: -0.065, y: 0.31, z: -0.07 } },
-  // Neck and head
+  // Neck and head: a plain ellipsoid with a small nose; the cross guide below shows where it faces
   { bone: 'neck', shape: { kind: 'cylinder', radiusTop: 0.045, radiusBottom: 0.05, height: 0.1 }, position: { x: 0, y: 0.05, z: 0 } },
-  ...HEAD.parts,
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.1, y: 0.12, z: 0.105 } }, position: { x: 0, y: 0.12, z: 0 } },
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.08, z: 0.095 } },
   // Shoulders (clavicles)
   { bone: 'leftShoulder', shape: { kind: 'capsule', radius: 0.045, length: 0.12 }, position: { x: 0.07, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 90 } },
   { bone: 'rightShoulder', shape: { kind: 'capsule', radius: 0.045, length: 0.12 }, position: { x: -0.07, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 90 } },
@@ -224,11 +193,15 @@ function eyeLine(bone: BoneId, y: number): PartDef {
   return { bone, shape: { kind: 'tube', radius: CENTER_LINE_RADIUS, points }, position: ZERO, accent: true }
 }
 
-/** Everything that makes up the mannequin: the body plus the guide lines on the face and torso. */
+/**
+ * Everything that makes up the mannequin: the body plus the guide lines. The
+ * head carries the cross guide of figure drawing (center line and an eye line
+ * a little above the middle), the torso a center line.
+ */
 export const MANNEQUIN_PARTS: PartDef[] = [
   ...BODY_PARTS,
   centerLine('head', 0.235, 0.005),
-  eyeLine('head', HEAD.eyeLineY),
+  eyeLine('head', 0.135),
   centerLine('chest', 0.41, -0.03),
   centerLine('hips', 0, -0.1),
 ]
@@ -259,8 +232,8 @@ export const JOINT_LANDMARKS: JointLandmark[] = [
   { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 }, ikChain: ['chest'] },
   { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 }, ikChain: ['neck', 'head'] },
   { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 }, ikChain: ['neck', 'head'] },
-  { id: 'chin', bone: 'head', offset: HEAD.chin, ikChain: ['neck', 'head'] },
-  { id: 'nose', bone: 'head', offset: HEAD.nose, ikChain: ['neck', 'head'] },
+  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 }, ikChain: ['neck', 'head'] },
+  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.08, z: 0.125 }, ikChain: ['neck', 'head'] },
   ...sidedLandmarks('shoulder', 'UpperArm', { x: 0, y: 0, z: 0 }, ['Shoulder']),
   ...sidedLandmarks('elbow', 'Forearm', { x: 0, y: 0, z: 0 }, ['UpperArm']),
   ...sidedLandmarks('wrist', 'Hand', { x: 0, y: 0, z: 0 }, ['UpperArm', 'Forearm']),
