@@ -85,8 +85,8 @@ export function createZeroRotations(): BoneRotations {
  * Body shapes of the mannequin. Every part belongs to a bone and is positioned
  * relative to that bone pivot. Kept deliberately featureless (no eyes, hair or
  * clothing) so image AIs treat it purely as a pose reference; front and back
- * are told apart by the build alone: a head with the jaw forward, a ribcage
- * leaning forward, shoulder blades and a seat behind.
+ * are told apart by the build: a nose, a ribcage leaning forward, shoulder
+ * blades and a seat behind, plus the guide lines on the front (see below).
  */
 const BODY_PARTS: PartDef[] = [
   // Pelvis, with the seat behind it
@@ -98,11 +98,10 @@ const BODY_PARTS: PartDef[] = [
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.15, y: 0.14, z: 0.11 } }, position: { x: 0, y: 0.29, z: 0.012 } },
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: 0.065, y: 0.31, z: -0.07 } },
   { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: -0.065, y: 0.31, z: -0.07 } },
-  // Neck and head: the round cranium sits back, the narrower face and jaw forward and down
+  // Neck and head: a plain ellipsoid with a small nose; the cross guide below shows where it faces
   { bone: 'neck', shape: { kind: 'cylinder', radiusTop: 0.045, radiusBottom: 0.05, height: 0.1 }, position: { x: 0, y: 0.05, z: 0 } },
-  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.097, y: 0.1, z: 0.1 } }, position: { x: 0, y: 0.14, z: -0.012 } },
-  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.075, y: 0.085, z: 0.085 } }, position: { x: 0, y: 0.08, z: 0.025 } },
-  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.1, z: 0.1 } },
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.1, y: 0.12, z: 0.105 } }, position: { x: 0, y: 0.12, z: 0 } },
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.08, z: 0.095 } },
   // Shoulders (clavicles)
   { bone: 'leftShoulder', shape: { kind: 'capsule', radius: 0.045, length: 0.12 }, position: { x: 0.07, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 90 } },
   { bone: 'rightShoulder', shape: { kind: 'capsule', radius: 0.045, length: 0.12 }, position: { x: -0.07, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 90 } },
@@ -160,10 +159,49 @@ function centerLine(bone: BoneId, top: number, bottom: number): PartDef {
   return { bone, shape: { kind: 'tube', radius: CENTER_LINE_RADIUS, points }, position: ZERO, accent: true }
 }
 
-/** Everything that makes up the mannequin: the body plus the center-front lines on the face and torso. */
+/** Distance from (0, y, 0) along the horizontal direction at `angle` (0 = +Z) to the outside of a bone's unrotated ellipsoids. */
+function horizontalReach(parts: PartDef[], y: number, angle: number): number {
+  const dx = Math.sin(angle)
+  const dz = Math.cos(angle)
+  let reach = -Infinity
+  for (const { shape, position, rotation } of parts) {
+    if (rotation || shape.kind !== 'ellipsoid') continue
+    const { radius } = shape
+    const ox = -position.x
+    const oz = -position.z
+    const a = (dx / radius.x) ** 2 + (dz / radius.z) ** 2
+    const b = 2 * ((dx * ox) / radius.x ** 2 + (dz * oz) / radius.z ** 2)
+    const c = (ox / radius.x) ** 2 + ((y - position.y) / radius.y) ** 2 + (oz / radius.z) ** 2 - 1
+    const discriminant = b * b - 4 * a * c
+    if (discriminant >= 0) reach = Math.max(reach, (-b + Math.sqrt(discriminant)) / (2 * a))
+  }
+  return reach
+}
+
+/**
+ * Eye line of the cross guide: wraps the front half of the head at height `y`,
+ * from one ear to the other, so it shows where the face points and how it tilts
+ * while the back of the head stays bare.
+ */
+function eyeLine(bone: BoneId, y: number): PartDef {
+  const parts = BODY_PARTS.filter((part) => part.bone === bone)
+  const points = Array.from({ length: CENTER_LINE_STEPS + 1 }, (_, index) => {
+    const angle = -Math.PI / 2 + (Math.PI * index) / CENTER_LINE_STEPS
+    const reach = horizontalReach(parts, y, angle) + 0.001
+    return { x: reach * Math.sin(angle), y, z: reach * Math.cos(angle) }
+  })
+  return { bone, shape: { kind: 'tube', radius: CENTER_LINE_RADIUS, points }, position: ZERO, accent: true }
+}
+
+/**
+ * Everything that makes up the mannequin: the body plus the guide lines. The
+ * head carries the cross guide of figure drawing (center line and an eye line
+ * a little above the middle), the torso a center line.
+ */
 export const MANNEQUIN_PARTS: PartDef[] = [
   ...BODY_PARTS,
-  centerLine('head', 0.22, 0.005),
+  centerLine('head', 0.235, 0.005),
+  eyeLine('head', 0.135),
   centerLine('chest', 0.41, -0.03),
   centerLine('hips', 0, -0.1),
 ]
@@ -184,7 +222,7 @@ function sidedLandmarks(name: string, bone: string, offset: Vec3, chain: string[
 /**
  * Points an AI agent can measure to check contact and grounding, or move with
  * the `reach` IK tool. Offsets are in the bone's local space and follow the
- * shapes in BODY_PARTS (cranium and face, hand ellipsoid, foot on the lower
+ * shapes in BODY_PARTS (head and nose, hand ellipsoid, foot on the lower
  * leg), so update both together. `ikChain` lists the bones IK rotates by
  * default to move the point, root side first; the pelvis and hips have none
  * because moving them means moving the whole body.
@@ -194,8 +232,8 @@ export const JOINT_LANDMARKS: JointLandmark[] = [
   { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 }, ikChain: ['chest'] },
   { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 }, ikChain: ['neck', 'head'] },
   { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 }, ikChain: ['neck', 'head'] },
-  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.01, z: 0.07 }, ikChain: ['neck', 'head'] },
-  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.1, z: 0.13 }, ikChain: ['neck', 'head'] },
+  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 }, ikChain: ['neck', 'head'] },
+  { id: 'nose', bone: 'head', offset: { x: 0, y: 0.08, z: 0.125 }, ikChain: ['neck', 'head'] },
   ...sidedLandmarks('shoulder', 'UpperArm', { x: 0, y: 0, z: 0 }, ['Shoulder']),
   ...sidedLandmarks('elbow', 'Forearm', { x: 0, y: 0, z: 0 }, ['UpperArm']),
   ...sidedLandmarks('wrist', 'Hand', { x: 0, y: 0, z: 0 }, ['UpperArm', 'Forearm']),
