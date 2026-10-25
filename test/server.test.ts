@@ -198,7 +198,7 @@ describe('opening the PoseRef page', () => {
     try {
       const first = await callTool(port, 'get_scene')
       assert.equal(first.isError, false, first.text)
-      assert.deepEqual(opened, [`http://127.0.0.1:${port}`])
+      assert.deepEqual(opened, [`http://127.0.0.1:${port}/?agent=1`])
 
       // The user closes the tab. Within the cooldown the tools do not open another one.
       ;(tab as WebSocket | null)?.close()
@@ -246,7 +246,7 @@ describe('opening the PoseRef page', () => {
       assert.equal(result.opened, true)
       assert.equal(result.tabs, 1)
       assert.equal(result.startedServer, false)
-      assert.deepEqual(opened, [`http://127.0.0.1:${port}`])
+      assert.deepEqual(opened, [`http://127.0.0.1:${port}/?agent=1`])
       assert.deepEqual(await bridge.request('getScene', {}), { version: 1, echo: 'getScene' })
     } finally {
       ;(tab as WebSocket | null)?.close()

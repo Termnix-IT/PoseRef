@@ -151,7 +151,7 @@ export class RemoteBridge implements BridgeClient {
     const body = (await response.json().catch(() => ({}))) as { ok?: boolean; result?: unknown; error?: string }
     if (body.ok === true) return body.result as BridgeMethods[M]['result']
     // 503 is the server's "no browser tab" answer; the tools react to it by opening the page.
-    if (response.status === 503) throw noBrowserError(this.baseUrl)
+    if (response.status === 503) throw noBrowserError(this.opener.url)
     if (body.ok === false && body.error) throw new Error(body.error)
     throw new Error(`The PoseRef server rejected the request (HTTP ${response.status}${body.error ? `: ${body.error}` : ''}).`)
   }

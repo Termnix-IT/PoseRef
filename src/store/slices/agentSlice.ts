@@ -15,6 +15,12 @@ const ROOT_OFFSET_LIMIT = 1.5
 
 export interface AgentSlice {
   agentStatus: AgentBridgeStatus
+  /**
+   * The user turned AI連携 on (saved with the scene). Only then does the page
+   * connect to the PoseRef server, and only when served from this computer.
+   */
+  agentEnabled: boolean
+  setAgentEnabled: (enabled: boolean) => void
   /** Registered by the 3D view; renders the review views an agent asks for. */
   reviewRenderer: ReviewRenderer | null
   /** Registered by the 3D view; reads joint landmark positions for agents. */
@@ -43,7 +49,9 @@ export function sceneDocumentFromState(state: AppStore): SceneDocument {
 }
 
 export const createAgentSlice: StateCreator<AppStore, [], [], AgentSlice> = (set, get) => ({
-  agentStatus: 'disconnected',
+  agentStatus: 'off',
+  agentEnabled: false,
+  setAgentEnabled: (agentEnabled) => set({ agentEnabled }),
   reviewRenderer: null,
   jointReader: null,
   setAgentStatus: (agentStatus) => set({ agentStatus }),

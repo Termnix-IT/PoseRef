@@ -37,7 +37,8 @@ export class NoBrowserError extends Error {}
 export function noBrowserError(url: string): NoBrowserError {
   return new NoBrowserError(
     `No PoseRef browser tab is connected. Call open_poseref, or ask the user to open ${url} in a browser, then retry. ` +
-      'If that page does not load, PoseRef is not running: the user can start it with `npx poseref`.',
+      'A PoseRef tab that is already open only connects after the user turns on AI連携 from the AI button in its toolbar. ' +
+      'If the page does not load, PoseRef is not running: the user can start it with `npx poseref`.',
   )
 }
 

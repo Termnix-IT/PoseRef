@@ -2,6 +2,7 @@ import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
 import type { InteractionMode } from '../../types'
 import { Icon } from '../ui/Icon'
+import { AgentMenu } from './AgentMenu'
 import { ExportMenu } from './ExportMenu'
 
 const MODES: Array<{ id: InteractionMode; label: string; title: string }> = [
@@ -23,8 +24,6 @@ export function Toolbar() {
   const resetAll = useAppStore((state) => state.resetAll)
   const setPaletteOpen = useAppStore((state) => state.setPaletteOpen)
   const setUiHidden = useAppStore((state) => state.setUiHidden)
-  const agentConnected = useAppStore((state) => state.agentStatus === 'connected')
-  const agentTitle = agentConnected ? UI.agent.connectedTitle : UI.agent.disconnectedTitle
 
   return (
     <header className="toolbar" role="toolbar" aria-label={UI.app.toolbar}>
@@ -59,10 +58,7 @@ export function Toolbar() {
       <button type="button" className="icon-btn" onClick={() => setUiHidden(true)} title={UI.app.hideUi} aria-label={UI.app.hideUi}>
         <Icon name="maximize" />
       </button>
-      <span className={`toolbar__agent${agentConnected ? ' is-connected' : ''}`} title={agentTitle} aria-label={agentTitle}>
-        <span className="toolbar__agent-dot" aria-hidden />
-        {UI.agent.label}
-      </span>
+      <AgentMenu />
       <button type="button" className="icon-btn" onClick={resetAll} title={UI.app.resetAllTitle} aria-label={UI.app.resetAll}>
         <Icon name="reset" />
       </button>
