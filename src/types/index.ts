@@ -41,6 +41,8 @@ export type PartShape =
   | { kind: 'capsule'; radius: number; length: number }
   | { kind: 'ellipsoid'; radius: Vec3 }
   | { kind: 'cylinder'; radiusTop: number; radiusBottom: number; height: number }
+  /** Thin tube through points given relative to the part position. */
+  | { kind: 'tube'; radius: number; points: Vec3[] }
 
 export interface PartDef {
   bone: BoneId
@@ -49,6 +51,8 @@ export interface PartDef {
   position: Vec3
   /** Rotation in degrees. */
   rotation?: Vec3
+  /** Drawn in a shade of the mannequin color instead of the color itself (guide lines). */
+  accent?: boolean
 }
 
 export type PosePresetId =

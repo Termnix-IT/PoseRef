@@ -58,7 +58,7 @@ export const BONE_PICKER_PAIRS: Array<{ label: string; left: BoneId; right: Bone
  * the whole body, which is what the pelvis mesh and the Yaw slider are for.
  */
 export const BONE_HANDLES: Partial<Record<BoneId, BoneHandleDef>> = {
-  chest: { offset: { x: 0, y: 0.3, z: 0.13 }, radius: 0.05 },
+  chest: { offset: { x: 0, y: 0.3, z: 0.145 }, radius: 0.05 },
   neck: { offset: { x: 0, y: 0.05, z: -0.085 }, radius: 0.042 },
   head: { offset: { x: 0, y: 0.06, z: 0.18 }, radius: 0.042 },
   leftShoulder: { offset: { x: 0.14, y: 0, z: 0 }, radius: 0.058 },
@@ -82,20 +82,26 @@ export function createZeroRotations(): BoneRotations {
 }
 
 /**
- * Visual parts that make up the mannequin. Every part belongs to a bone and is
- * positioned relative to that bone pivot. Kept deliberately featureless
- * (no face, hair or clothing) so image AIs treat it purely as a pose reference.
+ * Body shapes of the mannequin. Every part belongs to a bone and is positioned
+ * relative to that bone pivot. Kept deliberately featureless (no eyes, hair or
+ * clothing) so image AIs treat it purely as a pose reference; front and back
+ * are told apart by the build alone: a head with the jaw forward, a ribcage
+ * leaning forward, shoulder blades and a seat behind.
  */
-export const MANNEQUIN_PARTS: PartDef[] = [
-  // Pelvis
+const BODY_PARTS: PartDef[] = [
+  // Pelvis, with the seat behind it
   { bone: 'hips', shape: { kind: 'ellipsoid', radius: { x: 0.15, y: 0.1, z: 0.1 } }, position: { x: 0, y: -0.02, z: 0 } },
-  // Torso
+  { bone: 'hips', shape: { kind: 'ellipsoid', radius: { x: 0.07, y: 0.075, z: 0.055 } }, position: { x: 0.055, y: -0.07, z: -0.045 } },
+  { bone: 'hips', shape: { kind: 'ellipsoid', radius: { x: 0.07, y: 0.075, z: 0.055 } }, position: { x: -0.055, y: -0.07, z: -0.045 } },
+  // Torso: abdomen, and a ribcage pushed forward over it with shoulder blades behind
   { bone: 'chest', shape: { kind: 'capsule', radius: 0.105, length: 0.14 }, position: { x: 0, y: 0.1, z: 0 } },
-  { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.15, y: 0.14, z: 0.105 } }, position: { x: 0, y: 0.29, z: 0 } },
-  // Neck and head
+  { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.15, y: 0.14, z: 0.11 } }, position: { x: 0, y: 0.29, z: 0.012 } },
+  { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: 0.065, y: 0.31, z: -0.07 } },
+  { bone: 'chest', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.065, z: 0.03 } }, position: { x: -0.065, y: 0.31, z: -0.07 } },
+  // Neck and head: the round cranium sits back, the narrower face and jaw forward and down
   { bone: 'neck', shape: { kind: 'cylinder', radiusTop: 0.045, radiusBottom: 0.05, height: 0.1 }, position: { x: 0, y: 0.05, z: 0 } },
-  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.1, y: 0.12, z: 0.105 } }, position: { x: 0, y: 0.12, z: 0 } },
-  // Subtle nose bump: the only facing cue on an otherwise featureless head.
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.097, y: 0.1, z: 0.1 } }, position: { x: 0, y: 0.14, z: -0.012 } },
+  { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.075, y: 0.085, z: 0.085 } }, position: { x: 0, y: 0.08, z: 0.025 } },
   { bone: 'head', shape: { kind: 'ellipsoid', radius: { x: 0.022, y: 0.03, z: 0.03 } }, position: { x: 0, y: 0.1, z: 0.1 } },
   // Shoulders (clavicles)
   { bone: 'leftShoulder', shape: { kind: 'capsule', radius: 0.045, length: 0.12 }, position: { x: 0.07, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 90 } },
@@ -117,6 +123,51 @@ export const MANNEQUIN_PARTS: PartDef[] = [
   { bone: 'rightLowerLeg', shape: { kind: 'ellipsoid', radius: { x: 0.05, y: 0.035, z: 0.12 } }, position: { x: 0, y: -0.445, z: 0.06 } },
 ]
 
+const CENTER_LINE_RADIUS = 0.0035
+const CENTER_LINE_STEPS = 48
+
+/** Front (+Z) of a bone's unrotated ellipsoids and capsules on its center plane (x = 0) at height y. */
+function frontSurfaceZ(parts: PartDef[], y: number): number {
+  let front = -Infinity
+  for (const { shape, position, rotation } of parts) {
+    if (rotation) continue
+    let t = -1
+    let depth = 0
+    if (shape.kind === 'ellipsoid') {
+      t = 1 - ((y - position.y) / shape.radius.y) ** 2 - (position.x / shape.radius.x) ** 2
+      depth = shape.radius.z
+    } else if (shape.kind === 'capsule') {
+      const along = Math.max(Math.abs(y - position.y) - shape.length / 2, 0)
+      t = 1 - (along ** 2 + position.x ** 2) / shape.radius ** 2
+      depth = shape.radius
+    }
+    if (t >= 0) front = Math.max(front, position.z + depth * Math.sqrt(t))
+  }
+  return front
+}
+
+/**
+ * Center-front guide line drawn on a bone's surface from `top` down to
+ * `bottom`, like the construction line in figure drawing. It follows
+ * BODY_PARTS, so reshaping the body keeps the line on the surface.
+ */
+function centerLine(bone: BoneId, top: number, bottom: number): PartDef {
+  const parts = BODY_PARTS.filter((part) => part.bone === bone)
+  const points = Array.from({ length: CENTER_LINE_STEPS + 1 }, (_, index) => {
+    const y = top + ((bottom - top) * index) / CENTER_LINE_STEPS
+    return { x: 0, y, z: frontSurfaceZ(parts, y) + 0.001 }
+  })
+  return { bone, shape: { kind: 'tube', radius: CENTER_LINE_RADIUS, points }, position: ZERO, accent: true }
+}
+
+/** Everything that makes up the mannequin: the body plus the center-front lines on the face and torso. */
+export const MANNEQUIN_PARTS: PartDef[] = [
+  ...BODY_PARTS,
+  centerLine('head', 0.22, 0.005),
+  centerLine('chest', 0.41, -0.03),
+  centerLine('hips', 0, -0.1),
+]
+
 type Side = 'left' | 'right'
 const sided = (side: Side, bone: string) => `${side}${bone}` as BoneId
 
@@ -133,7 +184,7 @@ function sidedLandmarks(name: string, bone: string, offset: Vec3, chain: string[
 /**
  * Points an AI agent can measure to check contact and grounding, or move with
  * the `reach` IK tool. Offsets are in the bone's local space and follow the
- * shapes in MANNEQUIN_PARTS (head ellipsoid, hand ellipsoid, foot on the lower
+ * shapes in BODY_PARTS (cranium and face, hand ellipsoid, foot on the lower
  * leg), so update both together. `ikChain` lists the bones IK rotates by
  * default to move the point, root side first; the pelvis and hips have none
  * because moving them means moving the whole body.
@@ -143,7 +194,7 @@ export const JOINT_LANDMARKS: JointLandmark[] = [
   { id: 'neckBase', bone: 'neck', offset: { x: 0, y: 0, z: 0 }, ikChain: ['chest'] },
   { id: 'headCenter', bone: 'head', offset: { x: 0, y: 0.12, z: 0 }, ikChain: ['neck', 'head'] },
   { id: 'headTop', bone: 'head', offset: { x: 0, y: 0.24, z: 0 }, ikChain: ['neck', 'head'] },
-  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.02, z: 0.06 }, ikChain: ['neck', 'head'] },
+  { id: 'chin', bone: 'head', offset: { x: 0, y: 0.01, z: 0.07 }, ikChain: ['neck', 'head'] },
   { id: 'nose', bone: 'head', offset: { x: 0, y: 0.1, z: 0.13 }, ikChain: ['neck', 'head'] },
   ...sidedLandmarks('shoulder', 'UpperArm', { x: 0, y: 0, z: 0 }, ['Shoulder']),
   ...sidedLandmarks('elbow', 'Forearm', { x: 0, y: 0, z: 0 }, ['UpperArm']),
