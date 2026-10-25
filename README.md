@@ -222,6 +222,11 @@ Yawか、骨盤そのもののドラッグで変えます。
   見出しをクリックすると開閉します。閉じている間も構図情報・言語の切り替えとコピーは使え、
   その分3Dビューが縦に広がります。
 - すべてリセット（ポーズ・キャラクター・カメラ・画角・アスペクト比を初期化）
+- 自動保存: ポーズ・キャラクター（色を含む）・カメラ・アスペクト比・背景・グリッドと影・書き出しの基準サイズ・
+  プロンプトの言語と構図情報の設定は、変更のたびにブラウザ（localStorage）へ保存され、リロードしても元に戻ります。
+  保存はこのブラウザの中だけで、ボーンの選択・操作モード・元に戻すの履歴は保存しません。
+  保存データが壊れていたり範囲外の値を含んでいたりする場合は、その項目だけ初期値に戻して起動します。
+  初めからやり直したいときは「すべてリセット」を使ってください
 - 元に戻す（Ctrl+Z）/ やり直す（Ctrl+Shift+Z または Ctrl+Y）: ポーズ・キャラクター・カメラ・アスペクト比・背景の変更を
   1 操作ずつ取り消し、やり直します。スライダーや 3D ビューのドラッグは、押してから離すまでを 1 操作としてまとめ、
   マウスホイールでのズームや数値の入力のように離す操作がないものは、0.3 秒止まった時点で 1 操作に区切ります。
@@ -246,15 +251,17 @@ src/
     ui/        Button, Icon, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
     viewport/  Viewport, ViewCube, SceneCanvas, CameraRig, Mannequin, BoneHandle, RotationRings, SelectionBar, Ground, Lights,
                SceneBackground, ExportBridge, DevBridge（開発時のデバッグ用）, poseDragContext（ドラッグ操作の共有）
-  constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds,
+  constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds, sceneRanges（値の許容範囲）,
                prompts, uiText（UI 文言）
   hooks/       useFitAspect, useExport, useCopyText, usePoseDrag（ビュー上のドラッグ操作）, useShortcuts（キー操作）,
                useDismiss（メニューを閉じる）, useScrub（ラベルのドラッグで値を変える）, useCommands（コマンド一覧）,
                usePromptText（プロンプトの文面）
-  store/       Zustand ストア（slices: character / pose / camera / view / export / agent）と、元に戻す・やり直すの履歴（history）
+  store/       Zustand ストア（slices: character / pose / camera / view / export / agent）と、元に戻す・やり直すの履歴（history）、
+               ブラウザへの自動保存（persistence）
   types/       共通型定義
   utils/       math, rotation, exportPng, reviewRender（AI 確認用の複数視点描画）, composition, promptBuilder,
-               clipboard, download, history（履歴のまとめ方）, mirror（左右反転）, poseThumbnail（サムネイルの棒人間）
+               clipboard, download, history（履歴のまとめ方）, mirror（左右反転）, poseThumbnail（サムネイルの棒人間）,
+               savedScene（保存データの読み書きと検証）
 ```
 
 ドラッグ用ハンドルの位置と大きさは `src/constants/bones.ts` の `BONE_HANDLES` で調整します。

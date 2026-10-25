@@ -1,21 +1,12 @@
 import * as z from 'zod'
 import { ASPECT_RATIOS } from '../src/constants/aspectRatios.ts'
 import { BONE_IDS, JOINT_LANDMARKS } from '../src/constants/bones.ts'
-import { CAMERA_POSITION_RANGE, CAMERA_TARGET_RANGE, FOV_RANGE } from '../src/constants/cameraPresets.ts'
+import { SCENE_RANGES } from '../src/constants/sceneRanges.ts'
 import type { AspectRatioId, BoneId, ReviewViewId, SceneDocument } from '../src/types/index.ts'
 import { normalizeDegrees } from '../src/utils/math.ts'
 
-/** Accepted ranges. They match the UI sliders so anything an agent sets can also be edited by hand. */
-export const RANGES = {
-  angle: { min: -360, max: 360 },
-  rootOffset: { min: -1.5, max: 1.5 },
-  characterX: { min: -3, max: 3 },
-  characterY: { min: -1, max: 2 },
-  characterZ: { min: -3, max: 3 },
-  cameraPosition: CAMERA_POSITION_RANGE,
-  cameraTarget: CAMERA_TARGET_RANGE,
-  fov: FOV_RANGE,
-}
+/** Accepted ranges; see SCENE_RANGES. */
+export const RANGES = SCENE_RANGES
 
 const between = (range: { min: number; max: number }) => z.number().min(range.min).max(range.max)
 

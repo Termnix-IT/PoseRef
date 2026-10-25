@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { createHistorySlice, installHistoryTracking, type HistorySlice } from './history'
+import { installAutosave, restoreSavedScene } from './persistence'
 import { createAgentSlice, type AgentSlice } from './slices/agentSlice'
 import { createCameraSlice, type CameraSlice } from './slices/cameraSlice'
 import { createCharacterSlice, type CharacterSlice } from './slices/characterSlice'
@@ -40,4 +41,7 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   },
 }))
 
+// Restore first, so the saved scene is where undo history starts, not a step in it.
+restoreSavedScene(useAppStore)
 installHistoryTracking(useAppStore)
+installAutosave(useAppStore)
