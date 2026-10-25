@@ -1,55 +1,36 @@
 .app {
   display: grid;
-  grid-template-rows: 48px minmax(0, 1fr) auto;
+  grid-template-rows: 40px minmax(0, 1fr) auto 26px;
   height: 100vh;
   height: 100dvh;
 }
 
-/* Header */
-.header {
+/* Toolbar */
+.toolbar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 16px;
+  gap: 6px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 
-.header__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header__logo {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #4f8cff, #7cc4ff);
-  display: grid;
-  place-items: center;
-  box-shadow: 0 2px 8px rgba(79, 140, 255, 0.35);
-}
-
-.header__logo svg {
-  width: 18px;
+.toolbar__divider {
+  width: 1px;
   height: 18px;
+  margin: 0 4px;
+  background: var(--border);
 }
 
-.header__title {
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-}
-
-.header__spacer {
+.toolbar__spacer {
   flex: 1;
 }
 
-.header__agent {
+.toolbar__agent {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-right: 4px;
   color: var(--text-faint);
   font-size: 12px;
   font-weight: 600;
@@ -57,25 +38,25 @@
   cursor: default;
 }
 
-.header__agent.is-connected {
+.toolbar__agent.is-connected {
   color: var(--text-muted);
 }
 
-.header__agent-dot {
+.toolbar__agent-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--text-faint);
 }
 
-.header__agent.is-connected .header__agent-dot {
+.toolbar__agent.is-connected .toolbar__agent-dot {
   background: var(--success);
 }
 
 /* Main area */
 .app__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   min-height: 0;
 }
 
@@ -122,39 +103,126 @@
   display: block;
 }
 
-/* Controls drawn on the view: drag mode at top left, output size at top right. */
-.viewport__mode {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-
-.viewport__mode .segmented {
-  background: rgba(10, 12, 16, 0.74);
-  border-color: transparent;
-  backdrop-filter: blur(6px);
-}
-
-.viewport__badge {
+/* Output size on the frame; it opens the aspect ratio menu. */
+.viewport__frame .viewport__aspect {
   position: absolute;
   top: 10px;
   right: 10px;
-  padding: 4px 9px;
+}
+
+.viewport__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
   border-radius: 6px;
   background: rgba(10, 12, 16, 0.74);
   backdrop-filter: blur(6px);
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 11px;
-  user-select: none;
 }
 
-/* Sidebar */
-.sidebar {
+.viewport__badge:hover,
+.viewport__badge[aria-expanded='true'] {
+  color: var(--text);
+}
+
+/* Inspector */
+.inspector {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
   border-left: 1px solid var(--border);
   background: var(--panel);
+}
+
+.inspector__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector__title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inspector__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -6px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.inspector__back:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.inspector__sep {
+  color: var(--text-faint);
+}
+
+.inspector__body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Status bar */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.statusbar__hints {
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.statusbar__hints li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.statusbar__notice {
+  margin: 0 0 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar__notice--success {
+  color: var(--success);
+}
+
+.statusbar__notice--error {
+  color: var(--danger);
 }
 
 /* Prompt panel */
@@ -248,7 +316,7 @@
   .app {
     height: auto;
     min-height: 100vh;
-    grid-template-rows: 48px auto auto;
+    grid-template-rows: 40px auto auto 26px;
   }
 
   .app__main {
@@ -259,13 +327,42 @@
     height: 62vh;
   }
 
-  .sidebar {
+  .inspector {
     border-left: 0;
     border-top: 1px solid var(--border);
+  }
+
+  .inspector__body {
     overflow: visible;
+  }
+
+  .statusbar__hints li:nth-child(n + 3) {
+    display: none;
   }
 
   .prompt-panel__bar {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar {
+    gap: 2px;
+    padding: 0 6px;
+  }
+
+  .toolbar .segmented,
+  .toolbar .menu {
+    flex-shrink: 0;
+  }
+
+  .toolbar__divider {
+    display: none;
+  }
+
+  /* The colored dot alone shows the state; the tooltip still names it. */
+  .toolbar__agent {
+    font-size: 0;
+    margin: 0 4px;
   }
 }

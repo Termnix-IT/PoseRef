@@ -80,33 +80,6 @@
   justify-content: flex-end;
 }
 
-.divider {
-  height: 1px;
-  background: var(--border);
-}
-
-.button-row {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: 2fr;
-  grid-auto-columns: 1fr;
-  gap: 6px;
-}
-
-.status {
-  font-size: 12px;
-  min-height: 16px;
-  margin-top: -4px;
-}
-
-.status--success {
-  color: var(--success);
-}
-
-.status--error {
-  color: var(--danger);
-}
-
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -553,4 +526,103 @@
   flex-direction: column;
   gap: 8px;
   padding: 4px 10px 10px;
+}
+
+/* Icon-only buttons (toolbar) */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.icon-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.icon-btn:disabled {
+  color: var(--text-faint);
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Menus: a button and a panel that opens under it */
+.menu {
+  position: relative;
+}
+
+.menu__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  box-shadow: var(--shadow);
+}
+
+.menu__panel--right {
+  right: 0;
+}
+
+.menu__panel--list {
+  gap: 2px;
+  width: 180px;
+  padding: 4px;
+}
+
+.menu__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+}
+
+.menu__item:hover {
+  background: var(--panel-3);
+}
+
+.menu__item.is-active {
+  color: #dbe8ff;
+  background: var(--accent-soft);
+}
+
+.menu__item-meta {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Key caps in the status bar and menus */
+.kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.kbd--on-accent {
+  margin-left: auto;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
 }

@@ -60,11 +60,13 @@ export const createPoseSlice: StateCreator<AppStore, [], [], PoseSlice> = (set, 
       },
     })),
   applyPosePreset: (id) => {
-    get().pushUndo()
+    get().checkpoint()
     set({ pose: createPoseFromPreset(id) })
+    get().checkpoint()
   },
   resetPose: () => {
-    get().pushUndo()
+    get().checkpoint()
     set({ pose: createPoseFromPreset(DEFAULT_POSE_PRESET), selectedBone: null })
+    get().checkpoint()
   },
 })

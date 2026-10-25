@@ -6,8 +6,9 @@ export const UI = {
   app: {
     resetAll: 'すべてリセット',
     resetAllTitle: 'ポーズ・キャラクター・カメラ・画角・アスペクト比を初期状態に戻します',
-    undo: '元に戻す',
-    undoTitle: 'AIによる変更・プリセット・リセットを1つ取り消します (Ctrl+Z)。スライダーやドラッグの調整は対象外です',
+    undo: '元に戻す (Ctrl+Z)',
+    redo: 'やり直す (Ctrl+Shift+Z)',
+    toolbar: 'ツールバー',
   },
   agent: {
     label: 'AI',
@@ -26,11 +27,47 @@ export const UI = {
     label: '操作モード',
     camera: 'カメラ',
     pose: 'ポーズ',
-    cameraTitle: '左ドラッグ: カメラ回転 ／ 右ドラッグ: 移動 ／ ホイール: ズーム ／ クリック: ボーン選択',
-    poseTitle: 'マネキン・ハンドルをドラッグ: 関節を回転 ／ 背景をドラッグ: カメラ回転 ／ ホイール: ズーム',
+    cameraTitle: 'カメラ (C)',
+    poseTitle: 'ポーズ (P)',
   },
   viewport: {
-    output: '出力サイズ',
+    aspect: 'アスペクト比と出力サイズ',
+  },
+  inspector: {
+    label: 'インスペクタ',
+    scene: 'シーン',
+    back: 'シーンに戻る (Esc)',
+    rotation: '回転',
+  },
+  status: {
+    label: 'ステータスバー',
+    /** Key or mouse action, then what it does. Chosen by drag mode and whether a bone is selected. */
+    hints: {
+      camera: [
+        ['左ドラッグ', 'カメラ回転'],
+        ['右ドラッグ', '移動'],
+        ['ホイール', 'ズーム'],
+        ['クリック', 'ボーン選択'],
+      ],
+      cameraSelected: [
+        ['左ドラッグ', 'カメラ回転'],
+        ['右ドラッグ', '移動'],
+        ['ホイール', 'ズーム'],
+        ['Esc', '選択解除'],
+      ],
+      pose: [
+        ['マネキンをドラッグ', '関節を回転'],
+        ['背景をドラッグ', 'カメラ回転'],
+        ['ホイール', 'ズーム'],
+        ['クリック', 'ボーン選択'],
+      ],
+      poseSelected: [
+        ['マネキンをドラッグ', '関節を回転'],
+        ['背景をドラッグ', 'カメラ回転'],
+        ['Esc', '選択解除'],
+        ['Ctrl+Z', '元に戻す'],
+      ],
+    } as Record<'camera' | 'cameraSelected' | 'pose' | 'poseSelected', Array<[string, string]>>,
   },
   pose: {
     title: 'ポーズ',
@@ -38,6 +75,8 @@ export const UI = {
     bones: 'ボーン',
     rotationOf: (bone: string) => `${bone}の回転`,
     resetBone: 'ボーンをリセット',
+    showAll: 'すべて',
+    showLess: '閉じる',
   },
   character: {
     title: 'キャラクター',
@@ -63,12 +102,12 @@ export const UI = {
     shadow: '影',
   },
   export: {
-    title: '出力',
-    aspect: 'アスペクト比',
+    title: '書き出し',
     baseSize: '基準サイズ',
     exportPng: 'PNGを保存',
-    copyImage: 'コピー',
-    copyImageTitle: '画像をクリップボードにコピー',
+    exportShortcut: 'Ctrl+S',
+    copyImage: '画像をコピー',
+    aspectChanged: (label: string) => `アスペクト比を ${label} にしました`,
     rendering: 'レンダリング中...',
     saved: 'PNGを保存しました',
     copied: '画像をクリップボードにコピーしました',

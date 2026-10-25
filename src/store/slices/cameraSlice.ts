@@ -67,7 +67,7 @@ export const createCameraSlice: StateCreator<AppStore, [], [], CameraSlice> = (s
       }
     }),
   applyCameraPreset: (id) => {
-    get().pushUndo()
+    get().checkpoint()
     set((state) => {
       const preset = CAMERA_PRESET_MAP[id]
       return {
@@ -76,6 +76,7 @@ export const createCameraSlice: StateCreator<AppStore, [], [], CameraSlice> = (s
         activeCameraPreset: id,
       }
     })
+    get().checkpoint()
   },
   syncCameraFromControls: (position, target) => {
     const { camera } = get()

@@ -1,20 +1,22 @@
-import { Header } from './components/layout/Header'
-import { Sidebar } from './components/layout/Sidebar'
+import { Inspector } from './components/layout/Inspector'
+import { StatusBar } from './components/layout/StatusBar'
+import { Toolbar } from './components/layout/Toolbar'
 import { PromptPanel } from './components/panels/PromptPanel'
 import { Viewport } from './components/viewport/Viewport'
-import { useUndoShortcut } from './hooks/useUndoShortcut'
+import { useShortcuts } from './hooks/useShortcuts'
 
 export default function App() {
-  useUndoShortcut()
+  useShortcuts()
 
   return (
     <div className="app">
-      <Header />
+      <Toolbar />
       <main className="app__main">
         <Viewport />
-        <Sidebar />
+        <Inspector />
       </main>
       <PromptPanel />
+      <StatusBar />
     </div>
   )
 }

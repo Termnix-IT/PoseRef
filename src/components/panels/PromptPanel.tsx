@@ -17,7 +17,7 @@ import { Toggle } from '../ui/Toggle'
  * The options and the copy button live in the bar, so they work while collapsed.
  */
 export function PromptPanel() {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const language = useAppStore((state) => state.promptLanguage)
   const setLanguage = useAppStore((state) => state.setPromptLanguage)
   const includeDetails = useAppStore((state) => state.includePromptDetails)

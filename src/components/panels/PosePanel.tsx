@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BONE_MAP } from '../../constants/bones'
 import { POSE_GROUPS, POSE_PRESET_MAP, posePresetsByGroup } from '../../constants/posePresets'
 import { UI } from '../../constants/uiText'
@@ -11,27 +12,35 @@ import { BonePicker } from './BonePicker'
 
 const DEGREE = '°'
 
-export function PosePanel() {
+/**
+ * Pose presets for the scene inspector. Collapsed, it shows the group of the
+ * current preset (standing, gestures, actions, seated); "all" lists every group.
+ */
+export function PosePresetSection() {
+  const [expanded, setExpanded] = useState(false)
   const presetId = useAppStore((state) => state.pose.presetId)
   const applyPosePreset = useAppStore((state) => state.applyPosePreset)
   const resetPose = useAppStore((state) => state.resetPose)
-  const selectedBone = useAppStore((state) => state.selectedBone)
-  const selectBone = useAppStore((state) => state.selectBone)
-  const subtitle = presetId === 'custom' ? UI.common.custom : POSE_PRESET_MAP[presetId].label
+  const current = presetId === 'custom' ? null : POSE_PRESET_MAP[presetId]
+  const groups = expanded ? POSE_GROUPS : POSE_GROUPS.filter((group) => group.id === (current?.group ?? POSE_GROUPS[0].id))
 
   return (
     <Section
       title={UI.pose.title}
-      subtitle={subtitle}
+      subtitle={current ? current.label : UI.common.custom}
       actions={
-        <Button size="sm" variant="ghost" onClick={resetPose}>
-          {UI.common.reset}
-        </Button>
+        <>
+          <Button size="sm" variant="ghost" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+            {expanded ? UI.pose.showLess : UI.pose.showAll}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={resetPose}>
+            {UI.common.reset}
+          </Button>
+        </>
       }
     >
-      {/* Groups (standing, gestures, actions, seated) are told apart by spacing alone. */}
       <div className="preset-groups" role="group" aria-label={UI.pose.presets}>
-        {POSE_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.id} className="preset-grid preset-grid--3" role="group" aria-label={group.label}>
             {posePresetsByGroup(group.id).map((preset) => (
               <Button
@@ -47,45 +56,48 @@ export function PosePanel() {
           </div>
         ))}
       </div>
-      <div className="divider" />
-      <BonePicker selected={selectedBone} onSelect={selectBone} />
-      <BoneRotationEditor bone={selectedBone} />
     </Section>
   )
 }
 
-/**
- * X / Y / Z sliders for the bone highlighted in the picker above; shown
- * disabled until a bone is picked, so the layout says what to do first.
- */
-function BoneRotationEditor({ bone }: { bone: BoneId | null }) {
-  const rotation = useAppStore((state) => (bone ? state.pose.bones[bone] : null))
+/** Inspector content while a bone is selected: its rotation, then the picker to move to another bone. */
+export function BoneInspector({ bone }: { bone: BoneId }) {
+  const rotation = useAppStore((state) => state.pose.bones[bone])
   const setBoneRotation = useAppStore((state) => state.setBoneRotation)
   const resetBone = useAppStore((state) => state.resetBone)
-  const label = bone ? UI.pose.rotationOf(BONE_MAP[bone].label) : undefined
+  const selectBone = useAppStore((state) => state.selectBone)
+  const label = BONE_MAP[bone].label
 
   return (
-    <div className="control-group" role="group" aria-label={label}>
-      {AXES.map((axis) => (
-        <SliderField
-          key={axis}
-          label={axis.toUpperCase()}
-          value={rotation ? rotation[axis] : 0}
-          min={-180}
-          max={180}
-          step={1}
-          decimals={0}
-          unit={DEGREE}
-          disabled={!bone}
-          onChange={(value) => bone && setBoneRotation(bone, axis, value)}
-          onReset={() => bone && setBoneRotation(bone, axis, 0)}
-        />
-      ))}
-      <div className="control-group__actions">
-        <Button size="sm" variant="ghost" disabled={!bone} title={label && UI.common.resetOf(label)} onClick={() => bone && resetBone(bone)}>
-          {UI.pose.resetBone}
-        </Button>
-      </div>
-    </div>
+    <>
+      <Section
+        title={UI.inspector.rotation}
+        actions={
+          <Button size="sm" variant="ghost" title={UI.common.resetOf(UI.pose.rotationOf(label))} onClick={() => resetBone(bone)}>
+            {UI.common.reset}
+          </Button>
+        }
+      >
+        <div className="control-group" role="group" aria-label={UI.pose.rotationOf(label)}>
+          {AXES.map((axis) => (
+            <SliderField
+              key={axis}
+              label={axis.toUpperCase()}
+              value={rotation[axis]}
+              min={-180}
+              max={180}
+              step={1}
+              decimals={0}
+              unit={DEGREE}
+              onChange={(value) => setBoneRotation(bone, axis, value)}
+              onReset={() => setBoneRotation(bone, axis, 0)}
+            />
+          ))}
+        </div>
+      </Section>
+      <Section title={UI.pose.bones}>
+        <BonePicker selected={bone} onSelect={selectBone} />
+      </Section>
+    </>
   )
 }
