@@ -1,4 +1,3 @@
-import { AspectRatioPanel } from '../panels/AspectRatioPanel'
 import { BackgroundPanel } from '../panels/BackgroundPanel'
 import { CameraPanel } from '../panels/CameraPanel'
 import { CharacterPanel } from '../panels/CharacterPanel'
@@ -11,7 +10,6 @@ export function Sidebar() {
       <PosePanel />
       <CharacterPanel />
       <CameraPanel />
-      <AspectRatioPanel />
       <BackgroundPanel />
       <ExportPanel />
     </aside>

@@ -1,22 +1,13 @@
 import { UI } from '../../constants/uiText'
 import { useAppStore } from '../../store'
-import type { InteractionMode } from '../../types'
 import { Button } from '../ui/Button'
-import { SegmentedControl } from '../ui/SegmentedControl'
-
-const MODE_OPTIONS: Array<{ id: InteractionMode; label: string }> = [
-  { id: 'camera', label: UI.mode.camera },
-  { id: 'pose', label: UI.mode.pose },
-]
 
 export function Header() {
   const resetAll = useAppStore((state) => state.resetAll)
-  const isExporting = useAppStore((state) => state.isExporting)
-  const interactionMode = useAppStore((state) => state.interactionMode)
-  const setInteractionMode = useAppStore((state) => state.setInteractionMode)
   const agentConnected = useAppStore((state) => state.agentStatus === 'connected')
   const canUndo = useAppStore((state) => state.undoStack.length > 0)
   const undo = useAppStore((state) => state.undo)
+  const agentTitle = agentConnected ? UI.agent.connectedTitle : UI.agent.disconnectedTitle
 
   return (
     <header className="header">
@@ -33,25 +24,11 @@ export function Header() {
         </div>
         <h1 className="header__title">PoseRef</h1>
       </div>
-      <span className="header__tagline">{UI.app.tagline}</span>
       <div className="header__spacer" />
-      <span className="header__status" aria-live="polite">
-        {isExporting ? UI.app.rendering : null}
-      </span>
-      <span
-        className={`header__agent${agentConnected ? ' is-connected' : ''}`}
-        title={agentConnected ? UI.agent.connectedTitle : UI.agent.disconnectedTitle}
-      >
+      <span className={`header__agent${agentConnected ? ' is-connected' : ''}`} title={agentTitle} aria-label={agentTitle}>
         <span className="header__agent-dot" aria-hidden />
-        {agentConnected ? UI.agent.connected : UI.agent.disconnected}
+        {UI.agent.label}
       </span>
-      <SegmentedControl
-        compact
-        options={MODE_OPTIONS}
-        value={interactionMode}
-        onChange={setInteractionMode}
-        ariaLabel={UI.mode.label}
-      />
       <Button size="sm" onClick={undo} disabled={!canUndo} title={UI.app.undoTitle}>
         {UI.app.undo}
       </Button>

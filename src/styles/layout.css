@@ -42,33 +42,23 @@
   letter-spacing: 0.02em;
 }
 
-.header__tagline {
-  color: var(--text-muted);
-  font-size: 12px;
-  padding-left: 14px;
-  border-left: 1px solid var(--border);
-}
-
 .header__spacer {
   flex: 1;
-}
-
-.header__status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-family: var(--font-mono);
 }
 
 .header__agent {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  color: var(--text-faint);
   font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
+  cursor: default;
+}
+
+.header__agent.is-connected {
+  color: var(--text-muted);
 }
 
 .header__agent-dot {
@@ -132,43 +122,30 @@
   display: block;
 }
 
-.viewport__badge {
+/* Controls drawn on the view: drag mode at top left, output size at top right. */
+.viewport__mode {
   position: absolute;
   top: 10px;
   left: 10px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
+}
+
+.viewport__mode .segmented {
+  background: rgba(10, 12, 16, 0.74);
+  border-color: transparent;
+  backdrop-filter: blur(6px);
+}
+
+.viewport__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   padding: 4px 9px;
   border-radius: 6px;
   background: rgba(10, 12, 16, 0.74);
   backdrop-filter: blur(6px);
+  color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 11px;
-  pointer-events: none;
-  user-select: none;
-}
-
-.viewport__badge-label {
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 10px;
-}
-
-.viewport__badge-value {
-  color: var(--text);
-}
-
-.viewport__hint {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--text-faint);
-  font-size: 11px;
-  white-space: nowrap;
-  pointer-events: none;
   user-select: none;
 }
 
@@ -245,19 +222,6 @@
   margin-top: 6px;
 }
 
-.prompt-panel__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.prompt-panel__desc {
-  color: var(--text-muted);
-  font-size: 12px;
-  min-width: 0;
-}
-
 .prompt-panel__text {
   width: 100%;
   resize: vertical;
@@ -301,13 +265,7 @@
     overflow: visible;
   }
 
-  .prompt-panel__meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .header__tagline {
-    display: none;
+  .prompt-panel__bar {
+    flex-wrap: wrap;
   }
 }

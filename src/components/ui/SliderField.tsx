@@ -10,54 +10,56 @@ export interface SliderFieldProps {
   step?: number
   unit?: string
   decimals?: number
+  disabled?: boolean
   onChange: (value: number) => void
-  /** When provided, a small reset button is shown next to the label. */
+  /** When provided, a small reset button is shown at the end of the row. */
   onReset?: () => void
 }
 
-/** Slider paired with an editable number field. */
-export function SliderField({ label, value, min, max, step = 1, unit, decimals, onChange, onReset }: SliderFieldProps) {
+/** One row: short label, slider, editable number and an optional reset button. */
+export function SliderField({ label, value, min, max, step = 1, unit, decimals, disabled = false, onChange, onReset }: SliderFieldProps) {
   const id = useId()
   return (
-    <div className="field">
-      <div className="field__head">
-        <label className="field__label" htmlFor={id}>
-          {label}
-        </label>
-        {onReset ? (
-          <button
-            type="button"
-            className="field__reset"
-            onClick={onReset}
-            title={UI.common.resetOf(label)}
-            aria-label={UI.common.resetOf(label)}
-          >
-            {'\u21BA'}
-          </button>
-        ) : null}
-      </div>
-      <div className="field__controls">
-        <input
-          id={id}
-          type="range"
-          className="slider"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(event) => onChange(Number(event.target.value))}
-        />
-        <NumberInput
-          value={value}
-          min={min}
-          max={max}
-          step={step}
-          decimals={decimals}
-          unit={unit}
-          onChange={onChange}
-          ariaLabel={UI.common.valueOf(label)}
-        />
-      </div>
+    <div className={`field${disabled ? ' is-disabled' : ''}`}>
+      <label className="field__label" htmlFor={id}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="range"
+        className="slider"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+      <NumberInput
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        decimals={decimals}
+        unit={unit}
+        disabled={disabled}
+        onChange={onChange}
+        ariaLabel={UI.common.valueOf(label)}
+      />
+      {onReset ? (
+        <button
+          type="button"
+          className="field__reset"
+          onClick={onReset}
+          disabled={disabled}
+          title={UI.common.resetOf(label)}
+          aria-label={UI.common.resetOf(label)}
+        >
+          {'↺'}
+        </button>
+      ) : (
+        <span aria-hidden />
+      )}
     </div>
   )
 }

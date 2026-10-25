@@ -14,7 +14,7 @@ import { Toggle } from '../ui/Toggle'
  * Bottom panel: generates the prompt text to hand to the image AI along with
  * the PNG. One language is shown at a time, and the whole panel collapses to a
  * single bar so the 3D view can take the space when the prompt is not needed.
- * Copying stays available while collapsed.
+ * The options and the copy button live in the bar, so they work while collapsed.
  */
 export function PromptPanel() {
   const [open, setOpen] = useState(true)
@@ -46,7 +46,7 @@ export function PromptPanel() {
   const copyLabel = status === 'copied' ? UI.prompt.copied : status === 'error' ? UI.prompt.copyFailed : UI.prompt.copy
 
   return (
-    <section className={`prompt-panel${open ? ' is-open' : ''}`} aria-label={UI.prompt.title}>
+    <section className={`prompt-panel${open ? ' is-open' : ''}`} aria-label={UI.prompt.regionLabel}>
       <div className="prompt-panel__bar">
         <button
           type="button"
@@ -61,6 +61,12 @@ export function PromptPanel() {
           <h2 className="prompt-panel__title">{UI.prompt.title}</h2>
         </button>
         <div className="prompt-panel__actions">
+          <Toggle
+            label={UI.prompt.appendDetails}
+            title={UI.prompt.appendDetailsTitle}
+            checked={includeDetails}
+            onChange={setIncludeDetails}
+          />
           <SegmentedControl
             compact
             options={PROMPT_LANGUAGES}
@@ -79,10 +85,6 @@ export function PromptPanel() {
       </div>
       {open ? (
         <div className="prompt-panel__body">
-          <div className="prompt-panel__meta">
-            <p className="prompt-panel__desc">{UI.prompt.description}</p>
-            <Toggle label={UI.prompt.appendDetails} checked={includeDetails} onChange={setIncludeDetails} />
-          </div>
           <textarea
             className="prompt-panel__text"
             readOnly
