@@ -219,7 +219,8 @@ export type ReviewViewId = 'current' | 'front' | 'back' | 'left' | 'right' | 'to
 /** Renders the requested views side by side into one labeled PNG. */
 export type ReviewRenderer = (views: ReviewViewId[], size: number) => Promise<Blob>
 
-export type AgentBridgeStatus = 'connecting' | 'connected' | 'disconnected'
+/** 'off' until the user turns AI連携 on; 'disconnected' while on but the PoseRef server cannot be reached. */
+export type AgentBridgeStatus = 'off' | 'connecting' | 'connected' | 'disconnected'
 
 /** State that the undo history restores. */
 export interface Notice {

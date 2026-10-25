@@ -23,6 +23,20 @@ npx poseref setup
 タブを閉じてしまっても、次にツールを使ったときに開き直します（ユーザーがわざと閉じた直後に何度も開かないよう、自動で開くのは 60 秒に 1 回までです）。
 「PoseRef を開いて」と頼むと、エージェントが `open_poseref` で画面を開きます。すでにタブが開いていれば、新しいタブは増やしません。
 
+### AI 連携のオン・オフ
+
+PoseRef の画面は、初期状態では AI エージェントとつながりません（AI 連携はオフ）。つなぐ方法は 2 つです。
+
+- エージェントが開いたページ（`open_poseref`、またはタブがないときにツールが開くページ）は、最初から AI 連携がオンです。
+  アドレスに付く `?agent=1` が目印で、読み込んだあとアドレスからは消えます。
+- 自分で開いたページでは、ツールバーの「AI」を押して「AI連携を開始」を選びます。「AI連携を停止」で切れます。
+  オンにした状態はブラウザに保存され、リロードしても続きます。
+
+点の色は、白抜きがオフ、黄色が接続中または PoseRef サーバーが見つからない状態、緑が接続中（操作できる状態）です。
+AI 連携は、PoseRef を動かしているその PC で開いたページ（`127.0.0.1` / `localhost`）でだけ使えます。
+PoseRef のサーバーは、自分が配信したページ以外からの接続を受け付けないためです。Cloudflare Pages などに公開したページは接続を試みず、
+「AI」のメニューにローカル版の使い方（`npx poseref setup` と、ローカル版を開くリンク）を表示します。
+
 登録するコマンドはバージョンを固定しています（`npx -y poseref@<バージョン> mcp`）。新しい版が公開されても、知らないうちに別のコードが動くことはありません。
 更新するときは `npx poseref@latest setup` を実行し直してください。
 
@@ -152,7 +166,7 @@ npm への公開は `npm publish` で行います。`prepublishOnly` でビル�
 
 | 領域 | 内容 |
 | --- | --- |
-| 上 | ツールバー。左に操作モード（カメラ / ポーズ）と元に戻す・やり直す、右にコマンド検索・UIを隠す・AI 連携の状態・すべてリセット・書き出し（基準サイズ・PNG保存・画像のコピー） |
+| 上 | ツールバー。左に操作モード（カメラ / ポーズ）と元に戻す・やり直す、右にコマンド検索・UIを隠す・AI 連携（オン・オフと状態）・すべてリセット・書き出し（基準サイズ・PNG保存・画像のコピー） |
 | 中央 | 3D プレビュー（表示範囲 = 書き出し範囲。アスペクト比に合わせてレターボックス表示）。左上に視点キューブ、右上の出力サイズを押すとアスペクト比を変えられます |
 | 右 | インスペクタ。何も選択していないときはシーン（ポーズ / キャラクター / カメラ / 背景）、ボーンを選択するとそのボーンの回転とボーンの切り替え |
 | 下 | プロンプト（構図情報の追記・日本語 / English・コピー。見出しクリックで開閉、最初は閉じています）と、ステータスバー |
@@ -246,7 +260,7 @@ test/          node:test のテスト（npm test）
 src/
   agent/       サーバーとの WebSocket 接続と、やり取りするメッセージの型
   components/
-    layout/    Toolbar, ExportMenu, CommandPalette, Inspector, StatusBar
+    layout/    Toolbar, AgentMenu（AI 連携のオン・オフ）, ExportMenu, CommandPalette, Inspector, StatusBar
     panels/    Pose（プリセットとボーンの回転）/ PoseThumbnail / BonePicker / Character / Camera / Background / Prompt
     ui/        Button, Icon, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
     viewport/  Viewport, ViewCube, SceneCanvas, CameraRig, Mannequin, BoneHandle, RotationRings, SelectionBar, Ground, Lights,

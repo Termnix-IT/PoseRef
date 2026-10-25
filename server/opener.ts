@@ -1,3 +1,4 @@
+import { agentPageUrl } from '../src/agent/protocol.ts'
 import { openBrowser } from './browser.ts'
 
 const TAB_WAIT_MS = 20_000
@@ -41,8 +42,9 @@ export class PageOpener {
     this.options = options
   }
 
+  /** Opens with AI連携 already on, since an agent is asking for the page. */
   get url(): string {
-    return this.options.url
+    return agentPageUrl(this.options.url)
   }
 
   async ensureTab(automatic: boolean, countTabs: () => Promise<number>): Promise<Omit<OpenResult, 'url' | 'startedServer'>> {
@@ -54,7 +56,7 @@ export class PageOpener {
       if (Date.now() - this.lastAutoOpen < AUTO_OPEN_COOLDOWN_MS) return { tabs, opened: false, disabled: false }
       this.lastAutoOpen = Date.now()
     }
-    ;(this.options.openPage ?? ((url) => openBrowser(url, this.options.log)))(this.options.url)
+    ;(this.options.openPage ?? ((url) => openBrowser(url, this.options.log)))(this.url)
     const deadline = Date.now() + TAB_WAIT_MS
     while (tabs === 0 && Date.now() < deadline) {
       await sleep(POLL_MS)

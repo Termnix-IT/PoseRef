@@ -26,31 +26,117 @@
   flex: 1;
 }
 
+/* AI連携 button: the dot shows off (hollow), connecting or unreachable (amber) and connected (green). */
 .toolbar__agent {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-right: 4px;
-  color: var(--text-faint);
+  gap: 5px;
+  height: 28px;
+  margin-right: 2px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  cursor: default;
 }
 
-.toolbar__agent.is-connected {
-  color: var(--text-muted);
+.toolbar__agent:hover,
+.toolbar__agent[aria-expanded='true'] {
+  color: var(--text);
+  background: var(--panel-2);
 }
 
 .toolbar__agent-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--text-faint);
+  border: 1.5px solid var(--text-faint);
 }
 
-.toolbar__agent.is-connected .toolbar__agent-dot {
+.is-connecting .toolbar__agent-dot,
+.is-disconnected .toolbar__agent-dot {
+  border-color: #e8b04a;
+  background: #e8b04a;
+}
+
+.is-connected .toolbar__agent-dot {
+  border-color: var(--success);
   background: var(--success);
+}
+
+.agent-menu {
+  width: 280px;
+}
+
+.agent-menu__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.agent-menu__text,
+.agent-menu__note,
+.agent-menu__status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.agent-menu__status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--text);
+}
+
+.agent-menu__status .toolbar__agent-dot {
+  flex-shrink: 0;
+}
+
+.agent-menu__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.agent-menu__command {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 4px 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.agent-menu__command code {
+  flex: 1;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.agent-menu__command button {
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--panel-3);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.agent-menu__command button:hover {
+  color: var(--text);
 }
 
 /* Main area */
@@ -577,4 +663,8 @@
 .palette__empty {
   padding: 12px 10px;
   color: var(--text-muted);
+}
+
+.agent-menu a.btn {
+  text-decoration: none;
 }

@@ -33,6 +33,8 @@ export interface SavedSceneState {
   exportScale: ExportScale
   promptLanguage: PromptLanguage
   includePromptDetails: boolean
+  /** AI連携 stays on across reloads once the user turned it on in this browser. */
+  agentEnabled: boolean
 }
 
 export const SAVED_SCENE_KEYS = [
@@ -47,6 +49,7 @@ export const SAVED_SCENE_KEYS = [
   'exportScale',
   'promptLanguage',
   'includePromptDetails',
+  'agentEnabled',
 ] as const satisfies ReadonlyArray<keyof SavedSceneState>
 
 type Range = { min: number; max: number }
@@ -143,6 +146,7 @@ export function parseSavedScene(raw: string | null): Partial<SavedSceneState> {
     exportScale: oneOf(data.exportScale, [1, 2] as const),
     promptLanguage: oneOf(data.promptLanguage, ['ja', 'en'] as const),
     includePromptDetails: typeof data.includePromptDetails === 'boolean' ? data.includePromptDetails : null,
+    agentEnabled: typeof data.agentEnabled === 'boolean' ? data.agentEnabled : null,
   }
   // A saved camera only matches its preset if the camera itself was kept.
   if (!candidates.camera) candidates.activeCameraPreset = null

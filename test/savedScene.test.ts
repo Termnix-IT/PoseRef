@@ -18,6 +18,7 @@ function sampleState(): SavedSceneState {
     exportScale: 2,
     promptLanguage: 'en',
     includePromptDetails: false,
+    agentEnabled: true,
   }
 }
 

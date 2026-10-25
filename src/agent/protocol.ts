@@ -42,3 +42,17 @@ export interface BridgeFocus {
 export type BrowserToServerMessage = BridgeResponse | BridgeFocus
 
 export const BRIDGE_PATH = '/ws'
+
+/**
+ * The page does not connect to the bridge until the user turns AI連携 on.
+ * Pages opened for an agent (open_poseref, or a tool that found no tab) carry
+ * this query parameter so they connect straight away.
+ */
+export const AGENT_CONNECT_PARAM = 'agent'
+
+/** The PoseRef page URL that connects to the bridge as soon as it loads. */
+export function agentPageUrl(pageUrl: string): string {
+  const url = new URL(pageUrl)
+  url.searchParams.set(AGENT_CONNECT_PARAM, '1')
+  return url.toString()
+}

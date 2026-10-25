@@ -5,6 +5,7 @@ import { BONES } from '../constants/bones'
 import { CAMERA_PRESETS } from '../constants/cameraPresets'
 import { POSE_PRESETS } from '../constants/posePresets'
 import { UI } from '../constants/uiText'
+import { canUseAgentBridge } from '../agent/bridgeClient'
 import { useAppStore } from '../store'
 import { copyText } from '../utils/clipboard'
 import { useExport } from './useExport'
@@ -25,6 +26,7 @@ export interface Command {
 export function useCommands(): Command[] {
   const { downloadPng, copyPng, canCopyImage } = useExport()
   const prompt = usePromptText()
+  const agentEnabled = useAppStore((state) => state.agentEnabled)
   const C = UI.commands
 
   return useMemo(() => {
@@ -82,11 +84,20 @@ export function useCommands(): Command[] {
         )
       } },
     ]
+    if (canUseAgentBridge()) {
+      commands.push({
+        id: 'agent',
+        group: C.agent,
+        label: agentEnabled ? C.agentOff : C.agentOn,
+        keywords: 'ai agent mcp claude codex',
+        run: () => store().setAgentEnabled(!store().agentEnabled),
+      })
+    }
     if (canCopyImage) {
       commands.push({ id: 'copyPng', group: C.export, label: UI.export.copyImage, keywords: 'copy image clipboard', run: () => void copyPng() })
     }
     return commands
-  }, [C, downloadPng, copyPng, canCopyImage, prompt])
+  }, [C, downloadPng, copyPng, canCopyImage, prompt, agentEnabled])
 }
 
 /** Commands whose group, label or keywords contain every space-separated word of the query. */
