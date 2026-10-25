@@ -366,3 +366,57 @@
     margin: 0 4px;
   }
 }
+
+/* View cube over the 3D view (top left). Faces and edges are buttons placed in 3D with CSS. */
+.viewcube {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 54px;
+  height: 54px;
+  perspective: 260px;
+  pointer-events: none;
+}
+
+.viewcube__cube {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  transform-style: preserve-3d;
+}
+
+.viewcube__face,
+.viewcube__edge {
+  position: absolute;
+  top: 0;
+  height: 54px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(22, 25, 32, 0.82);
+  color: var(--text-muted);
+  font-size: 11px;
+  backface-visibility: hidden;
+  pointer-events: auto;
+}
+
+.viewcube__face {
+  left: 0;
+  width: 54px;
+}
+
+.viewcube__edge {
+  left: 21px;
+  width: 12px;
+  background: rgba(36, 42, 53, 0.9);
+}
+
+.viewcube__face:hover,
+.viewcube__edge:hover {
+  background: rgba(79, 140, 255, 0.45);
+  color: var(--text);
+}
+
+.viewcube__face.is-current {
+  border-color: var(--accent);
+  color: #dbe8ff;
+}

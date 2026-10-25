@@ -1,3 +1,5 @@
+import { UI } from '../../constants/uiText'
+import { useScrub } from '../../hooks/useScrub'
 import type { Axis, Vec3 } from '../../types'
 import { AXES } from '../../utils/math'
 import { NumberInput } from './NumberInput'
@@ -18,19 +20,37 @@ export function VectorFields({ label, value, min, max, step = 0.01, decimals = 2
     <div className="vector-row">
       <span className="vector-row__label">{label}</span>
       {AXES.map((axis) => (
-        <div key={axis} className="vector-row__axis">
-          <span className="vector-row__axis-name">{axis.toUpperCase()}</span>
-          <NumberInput
-            value={value[axis]}
-            min={min}
-            max={max}
-            step={step}
-            decimals={decimals}
-            onChange={(next) => onChange(axis, next)}
-            ariaLabel={`${label} ${axis.toUpperCase()}`}
-          />
-        </div>
+        <VectorAxis key={axis} axis={axis} label={label} value={value[axis]} min={min} max={max} step={step} decimals={decimals} onChange={onChange} />
       ))}
+    </div>
+  )
+}
+
+function VectorAxis({
+  axis,
+  label,
+  value,
+  min,
+  max,
+  step,
+  decimals,
+  onChange,
+}: Omit<VectorFieldsProps, 'value'> & { axis: Axis; value: number; step: number; decimals: number }) {
+  const scrub = useScrub({ value, min, max, step, onChange: (next) => onChange(axis, next) })
+  return (
+    <div className="vector-row__axis">
+      <span className="vector-row__axis-name scrub" title={UI.common.scrubTitle} {...scrub}>
+        {axis.toUpperCase()}
+      </span>
+      <NumberInput
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        decimals={decimals}
+        onChange={(next) => onChange(axis, next)}
+        ariaLabel={`${label} ${axis.toUpperCase()}`}
+      />
     </div>
   )
 }

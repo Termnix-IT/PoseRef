@@ -7,6 +7,7 @@ import { useFitAspect } from '../../hooks/useFitAspect'
 import { useAppStore } from '../../store'
 import { Icon } from '../ui/Icon'
 import { SceneCanvas } from './SceneCanvas'
+import { ViewCube } from './ViewCube'
 
 const VIEWPORT_PADDING = 20
 const TIMES = '×'
@@ -28,6 +29,7 @@ export function Viewport() {
     <div className="viewport" ref={containerRef}>
       <div className={frameClass} style={{ width: size.width, height: size.height }}>
         {size.width > 0 && size.height > 0 ? <SceneCanvas /> : null}
+        <ViewCube />
         <AspectRatioMenu />
       </div>
     </div>

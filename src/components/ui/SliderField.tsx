@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { UI } from '../../constants/uiText'
+import { useScrub } from '../../hooks/useScrub'
 import { NumberInput } from './NumberInput'
 
 export interface SliderFieldProps {
@@ -16,12 +17,13 @@ export interface SliderFieldProps {
   onReset?: () => void
 }
 
-/** One row: short label, slider, editable number and an optional reset button. */
+/** One row: short label (drag it to scrub the value), slider, editable number and an optional reset button. */
 export function SliderField({ label, value, min, max, step = 1, unit, decimals, disabled = false, onChange, onReset }: SliderFieldProps) {
   const id = useId()
+  const scrub = useScrub({ value, min, max, step, disabled, onChange })
   return (
     <div className={`field${disabled ? ' is-disabled' : ''}`}>
-      <label className="field__label" htmlFor={id}>
+      <label className="field__label scrub" htmlFor={id} title={UI.common.scrubTitle} {...scrub}>
         {label}
       </label>
       <input
