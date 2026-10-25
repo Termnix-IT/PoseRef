@@ -2,11 +2,12 @@ export interface ToggleProps {
   label: string
   checked: boolean
   onChange: (checked: boolean) => void
+  title?: string
 }
 
-export function Toggle({ label, checked, onChange }: ToggleProps) {
+export function Toggle({ label, checked, onChange, title }: ToggleProps) {
   return (
-    <label className="toggle">
+    <label className="toggle" title={title}>
       <input
         type="checkbox"
         className="toggle__input"

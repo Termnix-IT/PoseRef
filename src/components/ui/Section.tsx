@@ -2,7 +2,10 @@ import { useState, type ReactNode } from 'react'
 
 export interface SectionProps {
   title: string
-  /** Small mono-spaced text shown next to the title (e.g. active preset). */
+  /**
+   * Current value shown next to the title while the section is collapsed
+   * (e.g. the active preset). When open, the highlighted control says the same.
+   */
   subtitle?: string
   /** Buttons rendered on the right side of the header. */
   actions?: ReactNode
@@ -23,10 +26,10 @@ export function Section({ title, subtitle, actions, defaultOpen = true, children
           aria-expanded={open}
         >
           <span className="section__chevron" aria-hidden>
-            {'\u25B8'}
+            {'▸'}
           </span>
           <span className="section__title">{title}</span>
-          {subtitle ? <span className="section__subtitle">{subtitle}</span> : null}
+          {subtitle && !open ? <span className="section__subtitle">{subtitle}</span> : null}
         </button>
         {actions ? <div className="section__actions">{actions}</div> : null}
       </header>

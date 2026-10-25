@@ -12,6 +12,7 @@ export interface NumberInputProps {
   unit?: string
   ariaLabel?: string
   className?: string
+  disabled?: boolean
 }
 
 /** Numeric text field that keeps a local draft while typing and commits valid numbers. */
@@ -25,6 +26,7 @@ export function NumberInput({
   unit,
   ariaLabel,
   className,
+  disabled = false,
 }: NumberInputProps) {
   const [draft, setDraft] = useState<string | null>(null)
   const formatted = String(round(value, decimals))
@@ -53,6 +55,7 @@ export function NumberInput({
         min={min}
         max={max}
         step={step}
+        disabled={disabled}
         onFocus={() => setDraft(formatted)}
         onChange={(event) => {
           setDraft(event.target.value)

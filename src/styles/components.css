@@ -75,31 +75,28 @@
   gap: 8px;
 }
 
-.control-group__label {
+.control-group__actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  justify-content: flex-end;
 }
 
-.hint {
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.5;
+.divider {
+  height: 1px;
+  background: var(--border);
 }
 
-.hint--mono {
-  font-family: var(--font-mono);
-  font-size: 11px;
+.button-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 2fr;
+  grid-auto-columns: 1fr;
+  gap: 6px;
 }
 
 .status {
   font-size: 12px;
   min-height: 16px;
+  margin-top: -4px;
 }
 
 .status--success {
@@ -108,10 +105,6 @@
 
 .status--error {
   color: var(--danger);
-}
-
-.status--muted {
-  color: var(--text-muted);
 }
 
 /* Buttons */
@@ -201,15 +194,11 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.preset-group {
+/* Preset groups are separated by a wider gap instead of headings. */
+.preset-groups {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-}
-
-.preset-group__label {
-  color: var(--text-faint);
-  font-size: 11px;
+  gap: 12px;
 }
 
 .preset-grid .btn {
@@ -218,22 +207,22 @@
   text-overflow: ellipsis;
 }
 
-/* Fields (slider + number) */
+/* Fields: label, slider, number and reset on one row, columns aligned across rows */
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto 22px;
+  align-items: center;
+  gap: 8px;
 }
 
-.field__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.field.is-disabled {
+  opacity: 0.4;
 }
 
 .field__label {
   font-size: 12px;
-  color: var(--text);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .field__reset {
@@ -246,15 +235,9 @@
   border-radius: 4px;
 }
 
-.field__reset:hover {
+.field__reset:hover:not(:disabled) {
   color: var(--text);
   background: var(--panel-2);
-}
-
-.field__controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .slider {
@@ -505,14 +488,6 @@
   color: var(--text-muted);
   font-size: 12px;
   padding-left: 2px;
-}
-
-.bone-picker__side {
-  text-align: center;
-  color: var(--text-faint);
-  font-size: 10px;
-  font-family: var(--font-mono);
-  letter-spacing: 0.1em;
 }
 
 /* Swatches */

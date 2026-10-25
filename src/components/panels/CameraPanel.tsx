@@ -40,19 +40,15 @@ export function CameraPanel() {
         </Button>
       }
     >
-      <div className="control-group">
-        <div className="control-group__label">{UI.camera.preset}</div>
-        <div className="preset-grid preset-grid--3">
-          {CAMERA_PRESETS.map((preset) => (
-            <Button key={preset.id} size="sm" active={activePreset === preset.id} onClick={() => applyCameraPreset(preset.id)} title={preset.label}>
-              {preset.label}
-            </Button>
-          ))}
-        </div>
+      <div className="preset-grid preset-grid--3" role="group" aria-label={UI.camera.presets}>
+        {CAMERA_PRESETS.map((preset) => (
+          <Button key={preset.id} size="sm" active={activePreset === preset.id} onClick={() => applyCameraPreset(preset.id)} title={preset.label}>
+            {preset.label}
+          </Button>
+        ))}
       </div>
-      <SliderField label={UI.camera.fov} value={camera.fov} min={FOV_RANGE.min} max={FOV_RANGE.max} step={1} decimals={0} unit={DEGREE} onChange={setFov} onReset={() => setFov(DEFAULT_FOV)} />
       <div className="control-group">
-        <div className="control-group__label">{UI.camera.orbit}</div>
+        <SliderField label={UI.camera.fov} value={camera.fov} min={FOV_RANGE.min} max={FOV_RANGE.max} step={1} decimals={0} unit={DEGREE} onChange={setFov} onReset={() => setFov(DEFAULT_FOV)} />
         <SliderField label={UI.camera.yaw} value={round(orbit.yaw, 1)} min={-180} max={180} step={1} decimals={1} unit={DEGREE} onChange={(yaw) => setCameraOrbit({ yaw })} />
         <SliderField label={UI.camera.pitch} value={round(orbit.pitch, 1)} min={-89} max={89} step={1} decimals={1} unit={DEGREE} onChange={(pitch) => setCameraOrbit({ pitch })} />
         <SliderField label={UI.camera.distance} value={round(orbit.distance, 2)} min={CAMERA_DISTANCE_RANGE.min} max={CAMERA_DISTANCE_RANGE.max} step={0.05} decimals={2} unit="m" onChange={(distance) => setCameraOrbit({ distance })} />

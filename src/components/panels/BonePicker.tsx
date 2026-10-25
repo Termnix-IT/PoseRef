@@ -11,7 +11,7 @@ export interface BonePickerProps {
 /** Grid of bone buttons: center bones on top, then left / right pairs. */
 export function BonePicker({ selected, onSelect }: BonePickerProps) {
   return (
-    <div className="bone-picker">
+    <div className="bone-picker" role="group" aria-label={UI.pose.bones}>
       <div className="bone-picker__center">
         {BONE_PICKER_CENTER.map((id) => (
           <Button key={id} size="sm" active={selected === id} onClick={() => onSelect(id)}>
@@ -19,18 +19,13 @@ export function BonePicker({ selected, onSelect }: BonePickerProps) {
           </Button>
         ))}
       </div>
-      <div className="bone-picker__pair">
-        <span />
-        <span className="bone-picker__side">{UI.common.left}</span>
-        <span className="bone-picker__side">{UI.common.right}</span>
-      </div>
       {BONE_PICKER_PAIRS.map((pair) => (
         <div key={pair.label} className="bone-picker__pair">
           <span className="bone-picker__pair-label">{pair.label}</span>
-          <Button size="sm" active={selected === pair.left} title={BONE_MAP[pair.left].label} onClick={() => onSelect(pair.left)}>
+          <Button size="sm" active={selected === pair.left} title={BONE_MAP[pair.left].label} aria-label={BONE_MAP[pair.left].label} onClick={() => onSelect(pair.left)}>
             {UI.common.left}
           </Button>
-          <Button size="sm" active={selected === pair.right} title={BONE_MAP[pair.right].label} onClick={() => onSelect(pair.right)}>
+          <Button size="sm" active={selected === pair.right} title={BONE_MAP[pair.right].label} aria-label={BONE_MAP[pair.right].label} onClick={() => onSelect(pair.right)}>
             {UI.common.right}
           </Button>
         </div>
