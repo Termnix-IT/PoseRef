@@ -1,0 +1,37 @@
+schemaVersion: 1
+project:
+  id: poseref
+  title: PoseRef
+  description: 画像生成AIに渡すポーズと構図の参考画像を作るツールです。マネキンにポーズを付けてカメラを決め、3Dビューを PNG として書き出し、参考画像用のプロンプト（日本語・英語）をコピーできます。ポーズのプリセット、元に戻す・やり直す、視点キューブ、回転リングなどを備え、作業内容はブラウザ内に保存されます。Claude Code / Codex からポーズを付ける AI 連携は、npx poseref で起動するローカル版で使えます。
+  category: tools
+  status: stable
+  visibility: public
+  tags:
+  - ポーズ
+  - 構図
+  - 画像生成AI
+  - 3D
+hosting:
+  provider: cloudflare-pages
+  mode: git
+  projectName: pirafu-poseref
+  productionBranch: main
+  rootDirectory: .
+  buildCommand: npm run build
+  outputDirectory: dist
+launch:
+  type: external
+  url: https://pirafu-poseref.pages.dev
+catalog:
+  featured: false
+  thumbnail:
+    path: pirafu/media/thumbnail.png
+    alt: PoseRefの編集画面。中央の3Dビューにポーズを付けたマネキン、右にポーズの棒人間サムネイルの一覧、上にツールバーが並ぶ
+  screenshots: []
+links:
+  repository: https://github.com/Termnix-IT/PoseRef
+local:
+  build:
+  - npm
+  - run
+  - build
