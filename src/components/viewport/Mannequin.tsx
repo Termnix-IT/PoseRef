@@ -1,6 +1,7 @@
 import { useCursor } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { useMemo, useState } from 'react'
+import { CatmullRomCurve3, Color, Vector3 } from 'three'
 import { BONE_MAP, MANNEQUIN_PARTS, ROOT_BONE, childrenOf } from '../../constants/bones'
 import { usePoseDrag } from '../../hooks/usePoseDrag'
 import { useAppStore } from '../../store'
@@ -12,6 +13,13 @@ import { PoseDragContext, usePoseDragContext } from './poseDragContext'
 const HIGHLIGHT_COLOR = '#4f8cff'
 const UNIT_SCALE: [number, number, number] = [1, 1, 1]
 const ZERO_ROTATION: [number, number, number] = [0, 0, 0]
+
+/** Shade for guide lines: darker on light mannequin colors, lighter on dark ones. */
+function accentColor(color: string): string {
+  const shade = new Color(color)
+  const lightness = shade.getHSL({ h: 0, s: 0, l: 0 }).l
+  return `#${shade.offsetHSL(0, 0, lightness > 0.45 ? -0.2 : 0.16).getHexString()}`
+}
 
 /** Procedural, featureless mannequin driven by the pose store. */
 export function Mannequin() {
@@ -62,7 +70,8 @@ function BoneNode({ id }: { id: BoneId }) {
 function MannequinPart({ part }: { part: PartDef }) {
   const boneId = part.bone
   const selected = useAppStore((state) => state.selectedBone === boneId)
-  const color = useAppStore((state) => state.character.color)
+  const baseColor = useAppStore((state) => state.character.color)
+  const color = useMemo(() => (part.accent ? accentColor(baseColor) : baseColor), [part.accent, baseColor])
   const poseMode = useAppStore((state) => state.interactionMode === 'pose')
   const selectBone = useAppStore((state) => state.selectBone)
   const drag = usePoseDragContext()
@@ -124,5 +133,15 @@ function PartGeometry({ shape }: { shape: PartShape }) {
       return <sphereGeometry args={[1, 32, 24]} />
     case 'cylinder':
       return <cylinderGeometry args={[shape.radiusTop, shape.radiusBottom, shape.height, 24]} />
+    case 'tube':
+      return <TubePartGeometry shape={shape} />
   }
+}
+
+function TubePartGeometry({ shape }: { shape: Extract<PartShape, { kind: 'tube' }> }) {
+  const curve = useMemo(
+    () => new CatmullRomCurve3(shape.points.map((point) => new Vector3(point.x, point.y, point.z))),
+    [shape.points],
+  )
+  return <tubeGeometry args={[curve, shape.points.length * 2, shape.radius, 6, false]} />
 }

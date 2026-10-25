@@ -57,6 +57,8 @@ If a combined pose + camera change keeps failing, settle the pose first, then th
 - The character stands at the origin facing +Z. +X is the CHARACTER'S LEFT, +Y is up. Units are meters.
 - Seen from a front camera (+Z), the character's left side appears on the RIGHT of the image.
 - \`character.yaw\` turns the whole body around Y; +90 makes it face +X.
+- In renders, the front has a thin center line down the face and torso, a nose and a jaw; the back has none of
+  these but shows two shoulder blades and the seat.
 
 ## Bones
 Rotations are local Euler angles in degrees, order XYZ (three.js: Z is applied first, then Y, then X),
