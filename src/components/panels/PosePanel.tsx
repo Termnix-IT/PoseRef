@@ -8,7 +8,9 @@ import { AXES } from '../../utils/math'
 import { Button } from '../ui/Button'
 import { Section } from '../ui/Section'
 import { SliderField } from '../ui/SliderField'
+import { oppositeBone } from '../../utils/mirror'
 import { BonePicker } from './BonePicker'
+import { PoseThumbnail } from './PoseThumbnail'
 
 const DEGREE = '°'
 
@@ -21,6 +23,7 @@ export function PosePresetSection() {
   const presetId = useAppStore((state) => state.pose.presetId)
   const applyPosePreset = useAppStore((state) => state.applyPosePreset)
   const resetPose = useAppStore((state) => state.resetPose)
+  const mirrorPose = useAppStore((state) => state.mirrorPose)
   const current = presetId === 'custom' ? null : POSE_PRESET_MAP[presetId]
   const groups = expanded ? POSE_GROUPS : POSE_GROUPS.filter((group) => group.id === (current?.group ?? POSE_GROUPS[0].id))
 
@@ -33,6 +36,9 @@ export function PosePresetSection() {
           <Button size="sm" variant="ghost" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
             {expanded ? UI.pose.showLess : UI.pose.showAll}
           </Button>
+          <Button size="sm" variant="ghost" title={UI.pose.mirrorTitle} onClick={mirrorPose}>
+            {UI.pose.mirror}
+          </Button>
           <Button size="sm" variant="ghost" onClick={resetPose}>
             {UI.common.reset}
           </Button>
@@ -41,17 +47,19 @@ export function PosePresetSection() {
     >
       <div className="preset-groups" role="group" aria-label={UI.pose.presets}>
         {groups.map((group) => (
-          <div key={group.id} className="preset-grid preset-grid--3" role="group" aria-label={group.label}>
+          <div key={group.id} className="pose-library" role="group" aria-label={group.label}>
             {posePresetsByGroup(group.id).map((preset) => (
-              <Button
+              <button
                 key={preset.id}
-                size="sm"
-                active={presetId === preset.id}
+                type="button"
+                className={`pose-tile${presetId === preset.id ? ' is-active' : ''}`}
+                aria-pressed={presetId === preset.id}
                 title={`${preset.label} / ${preset.labelEn}`}
                 onClick={() => applyPosePreset(preset.id)}
               >
-                {preset.label}
-              </Button>
+                <PoseThumbnail presetId={preset.id} />
+                <span className="pose-tile__label">{preset.label}</span>
+              </button>
             ))}
           </div>
         ))}
@@ -66,16 +74,25 @@ export function BoneInspector({ bone }: { bone: BoneId }) {
   const setBoneRotation = useAppStore((state) => state.setBoneRotation)
   const resetBone = useAppStore((state) => state.resetBone)
   const selectBone = useAppStore((state) => state.selectBone)
+  const copyBoneToOppositeSide = useAppStore((state) => state.copyBoneToOppositeSide)
   const label = BONE_MAP[bone].label
+  const sided = oppositeBone(bone) !== bone
 
   return (
     <>
       <Section
         title={UI.inspector.rotation}
         actions={
-          <Button size="sm" variant="ghost" title={UI.common.resetOf(UI.pose.rotationOf(label))} onClick={() => resetBone(bone)}>
-            {UI.common.reset}
-          </Button>
+          <>
+            {sided ? (
+              <Button size="sm" variant="ghost" title={UI.pose.copyToOppositeTitle(label)} onClick={() => copyBoneToOppositeSide(bone)}>
+                {UI.pose.copyToOpposite}
+              </Button>
+            ) : null}
+            <Button size="sm" variant="ghost" title={UI.common.resetOf(UI.pose.rotationOf(label))} onClick={() => resetBone(bone)}>
+              {UI.common.reset}
+            </Button>
+          </>
         }
       >
         <div className="control-group" role="group" aria-label={UI.pose.rotationOf(label)}>

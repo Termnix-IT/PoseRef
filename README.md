@@ -153,7 +153,7 @@ npm への公開は `npm publish` で行います。`prepublishOnly` でビル�
 | 領域 | 内容 |
 | --- | --- |
 | 上 | ツールバー。左に操作モード（カメラ / ポーズ）と元に戻す・やり直す、右に AI 連携の状態・すべてリセット・書き出し（基準サイズ・PNG保存・画像のコピー） |
-| 中央 | 3D プレビュー（表示範囲 = 書き出し範囲。アスペクト比に合わせてレターボックス表示）。右上の出力サイズを押すとアスペクト比を変えられます |
+| 中央 | 3D プレビュー（表示範囲 = 書き出し範囲。アスペクト比に合わせてレターボックス表示）。左上に視点キューブ、右上の出力サイズを押すとアスペクト比を変えられます |
 | 右 | インスペクタ。何も選択していないときはシーン（ポーズ / キャラクター / カメラ / 背景）、ボーンを選択するとそのボーンの回転とボーンの切り替え |
 | 下 | プロンプト（構図情報の追記・日本語 / English・コピー。見出しクリックで開閉、最初は閉じています）と、ステータスバー |
 
@@ -182,6 +182,9 @@ Yawか、骨盤そのもののドラッグで変えます。
 - 左ドラッグ: カメラ回転（ポーズ操作モードではマネキン上のみ関節回転）/ 右ドラッグ: 移動 / ホイール: ズーム
 - マネキンの部位をクリックするとそのボーンが選択され、インスペクタがそのボーンの X/Y/Z 回転に切り替わります
 - 何もない場所をクリックするか Esc で選択解除（インスペクタはシーンに戻ります）
+- 左上の視点キューブは、キャラクターから見た正面・背面・左・右・上・下を表し、カメラに合わせて回ります。
+  面をクリックするとその方向から、縦の辺をクリックすると斜め前・斜め後ろから見る視点に切り替わります。
+  キャラクターの向き（Yaw）を変えても、「正面」は常にキャラクターの顔の側です。書き出した PNG には含まれません
 - ハンドルや選択中のハイライトは書き出したPNGには含まれません
 
 ### ポーズプリセット（24種）
@@ -193,12 +196,15 @@ Yawか、骨盤そのもののドラッグで変えます。
 | 動き | 歩く / 走る / ジャンプ / 構え |
 | 座り・寝 | 椅子に座る / 体育座り / 片膝立ち / 正座 / しゃがむ / 仰向け |
 
-プリセット適用後も各ボーンを個別に調整できます（調整するとプリセット表示は「カスタム」になります）。
+プリセットは、棒人間のサムネイルで並べています。キャラクターの左側の手足を青で描いているので、左右の向きも見分けられます。
+ポーズパネルの「反転」で今のポーズを左右反転でき、ボーンを選んだときの「反対側へ」で、そのボーンから先（上腕なら前腕と手も）を
+反対側へ写せます。プリセット適用後も各ボーンを個別に調整できます（調整するとプリセット表示は「カスタム」になります）。
 「振り返り」はポーズのみを変えるので、カメラプリセット「背面」と組み合わせると振り返り構図になります。
 
 ### その他の機能
 
 - 16 ボーンの X/Y/Z 回転（スライダー + 数値入力、またはビュー上のドラッグ）
+- スライダーの名前（X、向き、画角など）を左右にドラッグしても値を変えられます。Shift で 10 倍速、Alt で 1/10 の細かさになります
 - キャラクターの位置 (X/Y/Z) と向き (Yaw)、マネキンの色（背景とのコントラスト調整用）
 - カメラプリセット: 正面 / 背面 / 左側面 / 右側面 / ハイアングル / ローアングル / 斜め前
 - 画角 (FOV)、オービット（水平 / 上下 / 距離）、位置 / 注視点の数値指定
@@ -226,18 +232,18 @@ src/
   agent/       サーバーとの WebSocket 接続と、やり取りするメッセージの型
   components/
     layout/    Toolbar, ExportMenu, Inspector, StatusBar
-    panels/    Pose（プリセットとボーンの回転）/ BonePicker / Character / Camera / Background / Prompt
+    panels/    Pose（プリセットとボーンの回転）/ PoseThumbnail / BonePicker / Character / Camera / Background / Prompt
     ui/        Button, Icon, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
-    viewport/  Viewport, SceneCanvas, CameraRig, Mannequin, BoneHandle, Ground, Lights,
+    viewport/  Viewport, ViewCube, SceneCanvas, CameraRig, Mannequin, BoneHandle, Ground, Lights,
                SceneBackground, ExportBridge, DevBridge（開発時のデバッグ用）, poseDragContext（ドラッグ操作の共有）
   constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds,
                prompts, uiText（UI 文言）
   hooks/       useFitAspect, useExport, useCopyText, usePoseDrag（ビュー上のドラッグ操作）, useShortcuts（キー操作）,
-               useDismiss（メニューを閉じる）
+               useDismiss（メニューを閉じる）, useScrub（ラベルのドラッグで値を変える）
   store/       Zustand ストア（slices: character / pose / camera / view / export / agent）と、元に戻す・やり直すの履歴（history）
   types/       共通型定義
   utils/       math, rotation, exportPng, reviewRender（AI 確認用の複数視点描画）, composition, promptBuilder,
-               clipboard, download, history（履歴のまとめ方）
+               clipboard, download, history（履歴のまとめ方）, mirror（左右反転）, poseThumbnail（サムネイルの棒人間）
 ```
 
 ドラッグ用ハンドルの位置と大きさは `src/constants/bones.ts` の `BONE_HANDLES` で調整します。

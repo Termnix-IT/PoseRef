@@ -22,6 +22,7 @@ export const UI = {
     right: '右',
     resetOf: (label: string) => `${label}をリセット`,
     valueOf: (label: string) => `${label}の値`,
+    scrubTitle: '左右にドラッグして調整（Shift: 10倍速 / Alt: 1/10）',
   },
   mode: {
     label: '操作モード',
@@ -32,6 +33,17 @@ export const UI = {
   },
   viewport: {
     aspect: 'アスペクト比と出力サイズ',
+  },
+  viewCube: {
+    label: '視点キューブ',
+    front: '正面',
+    back: '背面',
+    left: '左',
+    right: '右',
+    top: '上',
+    bottom: '下',
+    /** Name of the three-quarter view on a vertical edge; yaw is relative to the character's facing. */
+    edge: (yaw: number) => ({ 45: '左斜め前', 135: '左斜め後ろ', [-135]: '右斜め後ろ', [-45]: '右斜め前' })[yaw] ?? '',
   },
   inspector: {
     label: 'インスペクタ',
@@ -77,6 +89,10 @@ export const UI = {
     resetBone: 'ボーンをリセット',
     showAll: 'すべて',
     showLess: '閉じる',
+    mirror: '反転',
+    mirrorTitle: 'ポーズを左右反転',
+    copyToOpposite: '反対側へ',
+    copyToOppositeTitle: (bone: string) => `${bone}から先を反対側へ写す`,
   },
   character: {
     title: 'キャラクター',
