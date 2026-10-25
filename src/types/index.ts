@@ -222,11 +222,22 @@ export type ReviewRenderer = (views: ReviewViewId[], size: number) => Promise<Bl
 export type AgentBridgeStatus = 'connecting' | 'connected' | 'disconnected'
 
 /** State that the undo history restores. */
+export interface Notice {
+  /** Changes with every message so the same text shown twice restarts its timer. */
+  id: number
+  text: string
+  tone: 'info' | 'success' | 'error'
+}
+
+/** The parts of the state that undo / redo restore. */
 export interface SceneSnapshot {
   pose: PoseState
   character: CharacterState
   camera: CameraState
   aspectRatio: AspectRatioId
+  background: BackgroundId
+  showGrid: boolean
+  showShadow: boolean
 }
 
 export interface BoneHandleDef {

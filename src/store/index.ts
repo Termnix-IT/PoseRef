@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createHistorySlice, installHistoryTracking, type HistorySlice } from './history'
 import { createAgentSlice, type AgentSlice } from './slices/agentSlice'
 import { createCameraSlice, type CameraSlice } from './slices/cameraSlice'
 import { createCharacterSlice, type CharacterSlice } from './slices/characterSlice'
@@ -17,6 +18,7 @@ export type AppStore = CharacterSlice &
   ViewSlice &
   ExportSlice &
   AgentSlice &
+  HistorySlice &
   ResetSlice
 
 export const useAppStore = create<AppStore>()((set, get, api) => ({
@@ -26,12 +28,16 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   ...createViewSlice(set, get, api),
   ...createExportSlice(set, get, api),
   ...createAgentSlice(set, get, api),
+  ...createHistorySlice(set, get, api),
   resetAll: () => {
     const state = get()
-    state.pushUndo()
+    state.checkpoint()
     state.resetCharacter()
     state.resetPose()
     state.resetCamera()
     state.resetAspectRatio()
+    state.checkpoint()
   },
 }))
+
+installHistoryTracking(useAppStore)
