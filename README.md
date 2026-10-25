@@ -152,7 +152,7 @@ npm への公開は `npm publish` で行います。`prepublishOnly` でビル�
 
 | 領域 | 内容 |
 | --- | --- |
-| 上 | ツールバー。左に操作モード（カメラ / ポーズ）と元に戻す・やり直す、右に AI 連携の状態・すべてリセット・書き出し（基準サイズ・PNG保存・画像のコピー） |
+| 上 | ツールバー。左に操作モード（カメラ / ポーズ）と元に戻す・やり直す、右にコマンド検索・UIを隠す・AI 連携の状態・すべてリセット・書き出し（基準サイズ・PNG保存・画像のコピー） |
 | 中央 | 3D プレビュー（表示範囲 = 書き出し範囲。アスペクト比に合わせてレターボックス表示）。左上に視点キューブ、右上の出力サイズを押すとアスペクト比を変えられます |
 | 右 | インスペクタ。何も選択していないときはシーン（ポーズ / キャラクター / カメラ / 背景）、ボーンを選択するとそのボーンの回転とボーンの切り替え |
 | 下 | プロンプト（構図情報の追記・日本語 / English・コピー。見出しクリックで開閉、最初は閉じています）と、ステータスバー |
@@ -176,6 +176,13 @@ Yawか、骨盤そのもののドラッグで変えます。
 
 回転は常に画面に対して自然な向きに入ります。画面の奥行き方向へ動かしたいときは、
 いったんカメラを回してからドラッグしてください。
+
+ポーズ操作モードでボーンを選ぶと、その関節のまわりに赤・緑・青の回転リングが出ます。リングをドラッグすると、
+そのボーン自身の X・Y・Z 軸のうち 1 つだけを回します（緑は手足の向きに沿った軸なので、腕や脚をひねる回転になります）。
+リングを真横から見ているときは、左右のドラッグ量で回ります。リングは書き出した PNG には含まれません。
+
+ボーンを選んでいる間は、関節の上に小さな操作バーが出ます。「親へ」「子へ」（キーボードの [ と ]）で隣のボーンへ選択を移し、
+「反対側へ」「リセット」「×」（選択解除）もここから使えます。
 
 ### 3D ビュー操作
 
@@ -220,6 +227,9 @@ Yawか、骨盤そのもののドラッグで変えます。
   マウスホイールでのズームや数値の入力のように離す操作がないものは、0.3 秒止まった時点で 1 操作に区切ります。
   ボーンの選択、操作モード、書き出しの基準サイズ、プロンプトの設定は対象外です。
 - PNG の保存は書き出しメニューのほか Ctrl+S でも実行できます
+- Ctrl+K（またはツールバーの検索アイコン）でコマンドパレットが開き、ポーズ・カメラ・ボーンの選択・背景・アスペクト比・書き出し・
+  プロンプトのコピーなどを名前で検索して実行できます。英語名（sitting など）でも見つかります
+- Ctrl+\（またはツールバーのアイコン）で 3D ビュー以外を隠し、構図だけを確認できます。右上の「UIを表示」か同じキーで戻ります
 
 ## ディレクトリ構成
 
@@ -231,15 +241,16 @@ test/          node:test のテスト（npm test）
 src/
   agent/       サーバーとの WebSocket 接続と、やり取りするメッセージの型
   components/
-    layout/    Toolbar, ExportMenu, Inspector, StatusBar
+    layout/    Toolbar, ExportMenu, CommandPalette, Inspector, StatusBar
     panels/    Pose（プリセットとボーンの回転）/ PoseThumbnail / BonePicker / Character / Camera / Background / Prompt
     ui/        Button, Icon, SliderField, NumberInput, SegmentedControl, Section, Toggle, VectorFields
-    viewport/  Viewport, ViewCube, SceneCanvas, CameraRig, Mannequin, BoneHandle, Ground, Lights,
+    viewport/  Viewport, ViewCube, SceneCanvas, CameraRig, Mannequin, BoneHandle, RotationRings, SelectionBar, Ground, Lights,
                SceneBackground, ExportBridge, DevBridge（開発時のデバッグ用）, poseDragContext（ドラッグ操作の共有）
   constants/   bones（ボーン階層・マネキン形状）, posePresets, cameraPresets, aspectRatios, backgrounds,
                prompts, uiText（UI 文言）
   hooks/       useFitAspect, useExport, useCopyText, usePoseDrag（ビュー上のドラッグ操作）, useShortcuts（キー操作）,
-               useDismiss（メニューを閉じる）, useScrub（ラベルのドラッグで値を変える）
+               useDismiss（メニューを閉じる）, useScrub（ラベルのドラッグで値を変える）, useCommands（コマンド一覧）,
+               usePromptText（プロンプトの文面）
   store/       Zustand ストア（slices: character / pose / camera / view / export / agent）と、元に戻す・やり直すの履歴（history）
   types/       共通型定義
   utils/       math, rotation, exportPng, reviewRender（AI 確認用の複数視点描画）, composition, promptBuilder,

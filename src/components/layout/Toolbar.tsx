@@ -21,6 +21,8 @@ export function Toolbar() {
   const undo = useAppStore((state) => state.undo)
   const redo = useAppStore((state) => state.redo)
   const resetAll = useAppStore((state) => state.resetAll)
+  const setPaletteOpen = useAppStore((state) => state.setPaletteOpen)
+  const setUiHidden = useAppStore((state) => state.setUiHidden)
   const agentConnected = useAppStore((state) => state.agentStatus === 'connected')
   const agentTitle = agentConnected ? UI.agent.connectedTitle : UI.agent.disconnectedTitle
 
@@ -51,6 +53,12 @@ export function Toolbar() {
         <Icon name="redo" />
       </button>
       <div className="toolbar__spacer" />
+      <button type="button" className="icon-btn" onClick={() => setPaletteOpen(true)} title={UI.app.commands} aria-label={UI.app.commands}>
+        <Icon name="search" />
+      </button>
+      <button type="button" className="icon-btn" onClick={() => setUiHidden(true)} title={UI.app.hideUi} aria-label={UI.app.hideUi}>
+        <Icon name="maximize" />
+      </button>
       <span className={`toolbar__agent${agentConnected ? ' is-connected' : ''}`} title={agentTitle} aria-label={agentTitle}>
         <span className="toolbar__agent-dot" aria-hidden />
         {UI.agent.label}

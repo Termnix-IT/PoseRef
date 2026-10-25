@@ -2,7 +2,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Plane, Quaternion, Raycaster, Vector2, Vector3, type Object3D } from 'three'
 import { useAppStore } from '../store'
-import type { BoneId } from '../types'
+import type { Axis, BoneId } from '../types'
 import { roundVec3 } from '../utils/math'
 import { eulerDegreesFromQuaternion } from '../utils/rotation'
 
@@ -13,8 +13,21 @@ import { eulerDegreesFromQuaternion } from '../utils/rotation'
  */
 const MIN_LEVER = 0.12
 
+/** Below this |cos| between a ring's axis and the view direction the ring is seen edge-on. */
+const EDGE_ON = 0.2
+/** Rotation per pixel of horizontal movement when a ring is seen edge-on. */
+const EDGE_ON_DEGREES_PER_PIXEL = 0.5
+
+const AXIS_VECTORS: Record<Axis, Vector3> = {
+  x: new Vector3(1, 0, 0),
+  y: new Vector3(0, 1, 0),
+  z: new Vector3(0, 0, 1),
+}
+
 export interface PoseDragHandlers {
   onPointerDown: (event: ThreeEvent<PointerEvent>) => void
+  /** Starts turning the bone around one of its own axes (the rotation rings). */
+  onRingPointerDown: (event: ThreeEvent<PointerEvent>, axis: Axis) => void
   onPointerOver: () => void
   onPointerOut: () => void
 }
@@ -22,15 +35,34 @@ export interface PoseDragHandlers {
 interface DragState {
   bone: BoneId
   pointerId: number
+}
+
+/** Where a bone is and how it is oriented when a drag starts. */
+interface BoneFrame {
+  bone: BoneId
   /** World position the bone rotates around. */
   pivot: Vector3
-  /** Camera-facing plane the cursor ray is projected onto. */
-  plane: Plane
-  /** Unit vector from the pivot to the grabbed point when the drag started. */
-  startDirection: Vector3
   startWorldQuaternion: Quaternion
   /** Inverse world rotation of the parent, to bring the result back into bone space. */
   parentWorldInverse: Quaternion
+}
+
+function boneFrame(group: Object3D): BoneFrame {
+  group.updateWorldMatrix(true, false)
+  return {
+    bone: group.userData.boneGroup as BoneId,
+    pivot: group.getWorldPosition(new Vector3()),
+    startWorldQuaternion: group.getWorldQuaternion(new Quaternion()),
+    parentWorldInverse: (group.parent ?? group).getWorldQuaternion(new Quaternion()).invert(),
+  }
+}
+
+/** Applies a world-space rotation `delta` on top of the start orientation and stores it as the bone's Euler angles. */
+function commitRotation(frame: BoneFrame, delta: Quaternion) {
+  const nextLocal = frame.parentWorldInverse.clone().multiply(delta.clone().multiply(frame.startWorldQuaternion))
+  const current = useAppStore.getState()
+  const previous = current.pose.bones[frame.bone]
+  current.setBoneRotationVec(frame.bone, roundVec3(eulerDegreesFromQuaternion(nextLocal, previous), 2))
 }
 
 /** Minimal shape of OrbitControls that this hook touches. */
@@ -103,81 +135,26 @@ export function usePoseDrag(): PoseDragHandlers {
     [controls],
   )
 
-  const onPointerDown = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {
-      const store = useAppStore.getState()
-      if (store.interactionMode !== 'pose' || event.button !== 0) return
-      const group = findBoneGroup(event.object)
-      if (!group) return
+  /** Turns the cursor position into a ray from the camera, or null when the canvas has no size. */
+  const rayAt = useCallback(
+    (event: { clientX: number; clientY: number }) => {
+      const rect = gl.domElement.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) return null
+      const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1)
+      raycasterRef.current.setFromCamera(ndc, camera)
+      return raycasterRef.current.ray
+    },
+    [camera, gl],
+  )
 
-      event.stopPropagation()
-      const bone = group.userData.boneGroup as BoneId
-      store.selectBone(bone)
-
-      event.object.updateWorldMatrix(true, false)
-      const pivot = group.getWorldPosition(new Vector3())
-      const startWorldQuaternion = group.getWorldQuaternion(new Quaternion())
-      const parentWorldInverse = (group.parent ?? group).getWorldQuaternion(new Quaternion()).invert()
-
-      // The bone turns so that the centre of the grabbed mesh follows the
-      // cursor, rather than the exact surface point under it. Limb parts and
-      // joint handles are centred on the bone axis, so swinging them stays in
-      // the plane of the screen instead of drifting out of it, while grips that
-      // sit off the axis on purpose, such as the handle in front of the face,
-      // still turn their bone the way their position suggests.
-      const direction = event.object.getWorldPosition(new Vector3()).sub(pivot)
-      if (direction.lengthSq() < 1e-6) {
-        // The grip sits on the pivot: swing the bone's own -Y axis instead.
-        direction.set(0, -1, 0).applyQuaternion(startWorldQuaternion)
-      }
-      direction.setLength(Math.max(direction.length(), MIN_LEVER))
-
-      const viewAxis = camera.getWorldDirection(new Vector3()).negate()
-      const plane = new Plane().setFromNormalAndCoplanarPoint(viewAxis, pivot.clone().add(direction))
-
-      const state: DragState = {
-        bone,
-        pointerId: event.pointerId,
-        pivot,
-        plane,
-        startDirection: direction.normalize(),
-        startWorldQuaternion,
-        parentWorldInverse,
-      }
+  /** Holds the camera still and calls `onMove` for every move of this pointer until it is released. */
+  const track = useCallback(
+    (state: DragState, onMove: (event: PointerEvent) => void) => {
       dragRef.current = state
       applyCameraInteraction()
-
-      const ndc = new Vector2()
-      const hit = new Vector3()
-      const targetDirection = new Vector3()
-      const delta = new Quaternion()
-      const nextWorld = new Quaternion()
-      const nextLocal = new Quaternion()
-
       const handleMove = (moveEvent: PointerEvent) => {
-        if (moveEvent.pointerId !== state.pointerId) return
-        const rect = gl.domElement.getBoundingClientRect()
-        if (rect.width === 0 || rect.height === 0) return
-        ndc.set(
-          ((moveEvent.clientX - rect.left) / rect.width) * 2 - 1,
-          -((moveEvent.clientY - rect.top) / rect.height) * 2 + 1,
-        )
-        raycasterRef.current.setFromCamera(ndc, camera)
-        if (!raycasterRef.current.ray.intersectPlane(state.plane, hit)) return
-
-        targetDirection.copy(hit).sub(state.pivot)
-        if (targetDirection.lengthSq() < 1e-6) return
-        targetDirection.normalize()
-
-        delta.setFromUnitVectors(state.startDirection, targetDirection)
-        nextWorld.copy(delta).multiply(state.startWorldQuaternion)
-        nextLocal.copy(state.parentWorldInverse).multiply(nextWorld)
-
-        const current = useAppStore.getState()
-        const previous = current.pose.bones[state.bone]
-        current.setBoneRotationVec(state.bone, roundVec3(eulerDegreesFromQuaternion(nextLocal, previous), 2))
+        if (moveEvent.pointerId === state.pointerId) onMove(moveEvent)
       }
-
       const handleUp = (upEvent: PointerEvent) => {
         if (upEvent.pointerId !== state.pointerId) return
         window.removeEventListener('pointermove', handleMove)
@@ -186,12 +163,94 @@ export function usePoseDrag(): PoseDragHandlers {
         if (dragRef.current === state) dragRef.current = null
         applyCameraInteraction()
       }
-
       window.addEventListener('pointermove', handleMove)
       window.addEventListener('pointerup', handleUp)
       window.addEventListener('pointercancel', handleUp)
     },
-    [applyCameraInteraction, camera, gl],
+    [applyCameraInteraction],
+  )
+
+  const onPointerDown = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      const store = useAppStore.getState()
+      if (store.interactionMode !== 'pose' || event.button !== 0) return
+      // A rotation ring under the cursor wins even when the body is nearer, since the rings are drawn on top.
+      if (event.intersections.some((hit) => hit.object.userData.rotationRing)) return
+      const group = findBoneGroup(event.object)
+      if (!group) return
+
+      event.stopPropagation()
+      const frame = boneFrame(group)
+      store.selectBone(frame.bone)
+
+      // The bone turns so that the centre of the grabbed mesh follows the
+      // cursor, rather than the exact surface point under it. Limb parts and
+      // joint handles are centred on the bone axis, so swinging them stays in
+      // the plane of the screen instead of drifting out of it, while grips that
+      // sit off the axis on purpose, such as the handle in front of the face,
+      // still turn their bone the way their position suggests.
+      event.object.updateWorldMatrix(true, false)
+      const direction = event.object.getWorldPosition(new Vector3()).sub(frame.pivot)
+      if (direction.lengthSq() < 1e-6) {
+        // The grip sits on the pivot: swing the bone's own -Y axis instead.
+        direction.set(0, -1, 0).applyQuaternion(frame.startWorldQuaternion)
+      }
+      direction.setLength(Math.max(direction.length(), MIN_LEVER))
+
+      const viewAxis = camera.getWorldDirection(new Vector3()).negate()
+      const plane = new Plane().setFromNormalAndCoplanarPoint(viewAxis, frame.pivot.clone().add(direction))
+      const startDirection = direction.normalize()
+      const hit = new Vector3()
+      const targetDirection = new Vector3()
+
+      track({ bone: frame.bone, pointerId: event.pointerId }, (moveEvent) => {
+        const ray = rayAt(moveEvent)
+        if (!ray || !ray.intersectPlane(plane, hit)) return
+        targetDirection.copy(hit).sub(frame.pivot)
+        if (targetDirection.lengthSq() < 1e-6) return
+        commitRotation(frame, new Quaternion().setFromUnitVectors(startDirection, targetDirection.normalize()))
+      })
+    },
+    [camera, rayAt, track],
+  )
+
+  const onRingPointerDown = useCallback(
+    (event: ThreeEvent<PointerEvent>, axis: Axis) => {
+      if (event.button !== 0) return
+      const group = findBoneGroup(event.object)
+      if (!group) return
+      event.stopPropagation()
+      const frame = boneFrame(group)
+      const worldAxis = AXIS_VECTORS[axis].clone().applyQuaternion(frame.startWorldQuaternion).normalize()
+      const plane = new Plane().setFromNormalAndCoplanarPoint(worldAxis, frame.pivot)
+      const viewAxis = camera.getWorldDirection(new Vector3())
+      const hit = new Vector3()
+
+      // Seen face-on, the bone turns by the angle the cursor sweeps around the
+      // pivot on the ring's plane. Seen edge-on that angle is unreliable, so
+      // horizontal mouse travel drives the rotation instead.
+      const startRay = rayAt(event.nativeEvent)
+      const start = startRay?.intersectPlane(plane, hit) ? hit.clone().sub(frame.pivot) : null
+      const edgeOn = Math.abs(worldAxis.dot(viewAxis)) < EDGE_ON || !start || start.lengthSq() < 1e-6
+      const startX = event.nativeEvent.clientX
+      const current = new Vector3()
+      const cross = new Vector3()
+
+      track({ bone: frame.bone, pointerId: event.pointerId }, (moveEvent) => {
+        let angle: number
+        if (edgeOn || !start) {
+          angle = (moveEvent.clientX - startX) * EDGE_ON_DEGREES_PER_PIXEL * (Math.PI / 180)
+        } else {
+          const ray = rayAt(moveEvent)
+          if (!ray || !ray.intersectPlane(plane, hit)) return
+          current.copy(hit).sub(frame.pivot)
+          if (current.lengthSq() < 1e-6) return
+          angle = Math.atan2(cross.crossVectors(start, current).dot(worldAxis), start.dot(current))
+        }
+        commitRotation(frame, new Quaternion().setFromAxisAngle(worldAxis, angle))
+      })
+    },
+    [camera, rayAt, track],
   )
 
   const onPointerOver = useCallback(() => {
@@ -205,7 +264,7 @@ export function usePoseDrag(): PoseDragHandlers {
   }, [applyCameraInteraction])
 
   return useMemo(
-    () => ({ onPointerDown, onPointerOver, onPointerOut }),
-    [onPointerDown, onPointerOver, onPointerOut],
+    () => ({ onPointerDown, onRingPointerDown, onPointerOver, onPointerOut }),
+    [onPointerDown, onRingPointerDown, onPointerOver, onPointerOut],
   )
 }

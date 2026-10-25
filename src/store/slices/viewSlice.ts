@@ -19,6 +19,12 @@ export interface ViewSlice {
   /** Short message for the status bar (export results and the like). */
   notice: Notice | null
   showNotice: (text: string, tone?: Notice['tone']) => void
+  /** The command palette (Ctrl+K) is open. */
+  paletteOpen: boolean
+  setPaletteOpen: (open: boolean) => void
+  /** Everything but the 3D view is hidden (Ctrl+\), to look at the composition alone. */
+  uiHidden: boolean
+  setUiHidden: (hidden: boolean) => void
 }
 
 export const createViewSlice: StateCreator<AppStore, [], [], ViewSlice> = (set) => ({
@@ -36,4 +42,8 @@ export const createViewSlice: StateCreator<AppStore, [], [], ViewSlice> = (set) 
   notice: null,
   showNotice: (text, tone = 'info') =>
     set((state) => ({ notice: { id: (state.notice?.id ?? 0) + 1, text, tone } })),
+  paletteOpen: false,
+  setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  uiHidden: false,
+  setUiHidden: (uiHidden) => set({ uiHidden }),
 })

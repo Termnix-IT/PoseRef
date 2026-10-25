@@ -19,16 +19,10 @@ export function ExportMenu() {
   const rootRef = useRef<HTMLDivElement>(null)
   const exportScale = useAppStore((state) => state.exportScale)
   const setExportScale = useAppStore((state) => state.setExportScale)
-  const showNotice = useAppStore((state) => state.showNotice)
   const { status, downloadPng, copyPng, canCopyImage } = useExport()
   const busy = status.kind === 'busy'
   const close = useCallback(() => setOpen(false), [])
   useDismiss(rootRef, open, close)
-
-  useEffect(() => {
-    if (status.kind === 'success') showNotice(status.message, 'success')
-    if (status.kind === 'error') showNotice(status.message, 'error')
-  }, [status, showNotice])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
