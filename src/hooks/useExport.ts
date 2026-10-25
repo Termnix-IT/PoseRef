@@ -18,6 +18,7 @@ export function useExport(resetAfterMs = 3000) {
   const [status, setStatus] = useState<ExportStatus>({ kind: 'idle' })
   const timer = useRef<number | null>(null)
   const setExporting = useAppStore((state) => state.setExporting)
+  const showNotice = useAppStore((state) => state.showNotice)
 
   useEffect(() => {
     return () => {
@@ -28,10 +29,11 @@ export function useExport(resetAfterMs = 3000) {
   const flash = useCallback(
     (next: ExportStatus) => {
       setStatus(next)
+      if (next.kind === 'success' || next.kind === 'error') showNotice(next.message, next.kind)
       if (timer.current) window.clearTimeout(timer.current)
       timer.current = window.setTimeout(() => setStatus({ kind: 'idle' }), resetAfterMs)
     },
-    [resetAfterMs],
+    [resetAfterMs, showNotice],
   )
 
   const renderCurrentView = useCallback(async (): Promise<Blob> => {

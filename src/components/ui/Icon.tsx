@@ -5,6 +5,8 @@ const PATHS = {
   download: 'M12 3v12m0 0-5-5m5 5 5-5M4 19h16',
   chevronDown: 'm6 9 6 6 6-6',
   chevronLeft: 'm15 18-6-6 6-6',
+  search: 'm21 21-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14',
+  maximize: 'M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3',
 } as const
 
 export type IconName = keyof typeof PATHS

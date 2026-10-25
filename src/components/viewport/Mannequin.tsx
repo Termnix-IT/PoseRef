@@ -9,6 +9,8 @@ import type { BoneId, PartDef, PartShape } from '../../types'
 import { degToRad } from '../../utils/math'
 import { BoneHandle } from './BoneHandle'
 import { PoseDragContext, usePoseDragContext } from './poseDragContext'
+import { RotationRings } from './RotationRings'
+import { SelectionBar } from './SelectionBar'
 
 const HIGHLIGHT_COLOR = '#4f8cff'
 const UNIT_SCALE: [number, number, number] = [1, 1, 1]
@@ -40,6 +42,7 @@ function BoneNode({ id }: { id: BoneId }) {
   const rotation = useAppStore((state) => state.pose.bones[id])
   const rootOffset = useAppStore((state) => (id === ROOT_BONE ? state.pose.rootOffset : null))
   const poseMode = useAppStore((state) => state.interactionMode === 'pose')
+  const selected = useAppStore((state) => state.selectedBone === id)
   const children = useMemo(() => childrenOf(id), [id])
   const parts = useMemo(() => MANNEQUIN_PARTS.filter((part) => part.bone === id), [id])
   const { offset } = BONE_MAP[id]
@@ -60,6 +63,8 @@ function BoneNode({ id }: { id: BoneId }) {
         <MannequinPart key={`${id}-${index}`} part={part} />
       ))}
       {poseMode ? <BoneHandle id={id} /> : null}
+      {poseMode && selected ? <RotationRings bone={id} /> : null}
+      {selected ? <SelectionBar bone={id} /> : null}
       {children.map((child) => (
         <BoneNode key={child.id} id={child.id} />
       ))}

@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react'
-import { POSE_PRESET_MAP } from '../../constants/posePresets'
+import { useState } from 'react'
 import { PROMPT_LANGUAGES } from '../../constants/prompts'
 import { UI } from '../../constants/uiText'
 import { useCopyText } from '../../hooks/useCopyText'
+import { usePromptText } from '../../hooks/usePromptText'
 import { useAppStore } from '../../store'
-import { describeComposition } from '../../utils/composition'
-import { buildPrompt, type PromptContext } from '../../utils/promptBuilder'
 import { Button } from '../ui/Button'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { Toggle } from '../ui/Toggle'
@@ -22,25 +20,8 @@ export function PromptPanel() {
   const setLanguage = useAppStore((state) => state.setPromptLanguage)
   const includeDetails = useAppStore((state) => state.includePromptDetails)
   const setIncludeDetails = useAppStore((state) => state.setIncludePromptDetails)
-  const camera = useAppStore((state) => state.camera)
-  const character = useAppStore((state) => state.character)
-  const presetId = useAppStore((state) => state.pose.presetId)
-  const aspectRatio = useAppStore((state) => state.aspectRatio)
   const { status, copy } = useCopyText()
-
-  const context = useMemo<PromptContext>(() => {
-    const preset = presetId === 'custom' ? null : POSE_PRESET_MAP[presetId]
-    return {
-      poseLabel: preset ? { ja: preset.label, en: preset.labelEn } : { ja: UI.common.custom, en: 'Custom' },
-      aspectRatio,
-      composition: describeComposition(camera, character),
-    }
-  }, [presetId, aspectRatio, camera, character])
-
-  const text = useMemo(
-    () => buildPrompt(language, includeDetails, context),
-    [language, includeDetails, context],
-  )
+  const text = usePromptText()
 
   const languageLabel = PROMPT_LANGUAGES.find((item) => item.id === language)?.label ?? ''
   const copyLabel = status === 'copied' ? UI.prompt.copied : status === 'error' ? UI.prompt.copyFailed : UI.prompt.copy
